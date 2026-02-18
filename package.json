@@ -4,7 +4,7 @@
   "description": "Flow is a modern VSCode extension that reimagines the terminal experience. Inspired by tools like Warp and Wave, Flow brings features like intelligent autocomplete, multi-log monitoring, split view with drag-and-drop, and powerful command chaining — all within your editor ",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.104.0"
+    "vscode": "^1.10.5"
   },
   "categories": [
     "Other"
@@ -14,35 +14,62 @@
   "contributes": {
     "commands": [
       {
-        "command": "flow.helloWorld",
-        "title": "Hello World"
+        "command": "flow.newFile",
+        "title": "Flow: New File"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "flow.editor",
+        "displayName": "Flow Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.flow"
+          }
+        ],
+        "priority": "default"
       }
     ]
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package",
-    "compile": "pnpm run check-types && pnpm run lint && node esbuild.js",
+    "build:css": "npx @tailwindcss/cli -i ./src/webview/styles.css -o ./dist/webview.css --minify",
+    "watch:css": "npx @tailwindcss/cli -i ./src/webview/styles.css -o ./dist/webview.css --watch",
+    "compile": "pnpm run build:css && pnpm run check-types && pnpm run lint && node esbuild.js",
+    "compile:extension": "node esbuild.js",
+    "compile:webview": "node esbuild.js",
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "pnpm run check-types && pnpm run lint && node esbuild.js --production",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
+    "package": "pnpm run build:css && pnpm run check-types && pnpm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir dist",
+    "watch-tests": "tsc -p . -w --outDir dist",
     "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.104.0",
+    "@tailwindcss/cli": "^4.1.18",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "typescript-eslint": "^8.48.1",
-    "eslint": "^9.39.1",
-    "esbuild": "^0.27.1",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.9.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/vscode": "^1.104.0",
     "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.27.1",
+    "eslint": "^9.39.1",
+    "npm-run-all": "^4.1.5",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.1"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.44",
+    "ansi-to-react": "^6.2.6",
+    "immer": "^11.1.4",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }

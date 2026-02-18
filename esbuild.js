@@ -1,56 +1,64 @@
 const esbuild = require("esbuild");
 
-const production = process.argv.includes('--production');
-const watch = process.argv.includes('--watch');
+const production = process.argv.includes("--production");
+const watch = process.argv.includes("--watch");
 
-/**
- * @type {import('esbuild').Plugin}
- */
 const esbuildProblemMatcherPlugin = {
-	name: 'esbuild-problem-matcher',
-
-	setup(build) {
-		build.onStart(() => {
-			console.log('[watch] build started');
-		});
-		build.onEnd((result) => {
-			result.errors.forEach(({ text, location }) => {
-				console.error(`✘ [ERROR] ${text}`);
-				console.error(`    ${location.file}:${location.line}:${location.column}:`);
-			});
-			console.log('[watch] build finished');
-		});
-	},
+  name: "esbuild-problem-matcher",
+  setup(build) {
+    build.onStart(() => console.log("[watch] build started"));
+    build.onEnd((result) => {
+      result.errors.forEach(({ text, loc }) => {
+        console.error(`✘ [ERROR] ${text}`);
+        console.error(`    ${loc.file}:${loc.line}:${loc.column}:`);
+      });
+      console.log("[watch] build finished");
+    });
+  },
 };
 
 async function main() {
-	const ctx = await esbuild.context({
-		entryPoints: [
-			'src/extension.ts'
-		],
-		bundle: true,
-		format: 'cjs',
-		minify: production,
-		sourcemap: !production,
-		sourcesContent: false,
-		platform: 'node',
-		outfile: 'dist/extension.js',
-		external: ['vscode'],
-		logLevel: 'silent',
-		plugins: [
-			/* add to the end of plugins array */
-			esbuildProblemMatcherPlugin,
-		],
-	});
-	if (watch) {
-		await ctx.watch();
-	} else {
-		await ctx.rebuild();
-		await ctx.dispose();
-	}
+  const commonConfig = {
+    bundle: true,
+    minify: production,
+    sourcemap: !production,
+    logLevel: "silent",
+    plugins: [esbuildProblemMatcherPlugin],
+  };
+
+  // Extension Context
+  const ctx = await esbuild.context({
+    ...commonConfig,
+    entryPoints: ["src/extension.ts"],
+    format: "cjs",
+    platform: "node",
+    outfile: "dist/extension.js",
+    external: ["vscode"],
+  });
+
+  // Webview Context
+  const webviewCtx = await esbuild.context({
+    ...commonConfig,
+    entryPoints: ["src/webview/index.tsx"],
+    format: "iife",
+    platform: "browser",
+    outfile: "dist/webview.js",
+    jsx: "automatic",
+    loader: { ".tsx": "tsx", ".ts": "ts" },
+  });
+
+  if (watch) {
+    await ctx.watch();
+    await webviewCtx.watch();
+  } else {
+    await ctx.rebuild();
+    await webviewCtx.rebuild();
+    await ctx.dispose();
+    await webviewCtx.dispose();
+  }
 }
 
-main().catch(e => {
-	console.error(e);
-	process.exit(1);
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
 });

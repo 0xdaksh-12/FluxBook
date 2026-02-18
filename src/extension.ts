@@ -1,26 +1,53 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
+import { defaultDoc } from "./utils/constant";
+import { FlowEditorProvider } from "./extension/providers/FlowEditorProvider";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  console.log('Congratulations, your extension "flow" is now active!');
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "flow" is now active!');
+  // Register the custom editor provider for .flow files
+  const provider = new FlowEditorProvider(context);
+  const editorProvider = vscode.window.registerCustomEditorProvider(
+    "flow.editor",
+    provider,
+  );
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('flow.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Flow!');
-	});
+  // Register command to create new .flow file
+  const newFileCommand = vscode.commands.registerCommand(
+    "flow.newFile",
+    async () => {
+      const uri = await vscode.window.showSaveDialog({
+        filters: { "Flow Files": ["flow"] },
+        defaultUri: vscode.Uri.file("untitled.flow"),
+      });
 
-	context.subscriptions.push(disposable);
+      if (uri) {
+        // Write default document structure
+        await vscode.workspace.fs.writeFile(
+          uri,
+          Buffer.from(JSON.stringify(defaultDoc, null, 2)),
+        );
+        // Open with Flow editor
+        await vscode.commands.executeCommand(
+          "vscode.openWith",
+          uri,
+          "flow.editor",
+        );
+      }
+    },
+  );
+
+  // Add all disposables to subscriptions
+  context.subscriptions.push(editorProvider, newFileCommand);
+
+  // Development: Auto-reload on file changes
+  if (process.env.FLOW_DEV_RELOAD === "true") {
+    const watcher = vscode.workspace.createFileSystemWatcher("**/dist/**/*.js");
+    watcher.onDidChange(() => {
+      vscode.commands.executeCommand("workbench.action.reloadWindow");
+    });
+    context.subscriptions.push(watcher);
+  }
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
