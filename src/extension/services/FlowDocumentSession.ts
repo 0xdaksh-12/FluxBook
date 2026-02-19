@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { FlowDocument } from "../../types/MessageProtocol";
 import { defaultDoc } from "../../utils/constant";
 import { Ext } from "../../utils/logger";
+import { ShellResolver } from "./ShellResolver";
 
 export class FlowDocumentSession {
   private isDisposed = false;
@@ -52,6 +53,19 @@ export class FlowDocumentSession {
               await this.updateTextDocument(updated);
               this.sendDocument(updated, false);
             });
+            break;
+          case "shellConfig":
+            this.enqueue(async () => {
+              const shells = await ShellResolver.resolve();
+              this.panel.webview.postMessage({
+                type: "shellList",
+                shells,
+              });
+            });
+            break;
+
+          case "log":
+            Ext.info(message.message);
             break;
 
           default:

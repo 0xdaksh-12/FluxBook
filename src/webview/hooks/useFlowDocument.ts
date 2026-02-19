@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
+import { produce } from "immer";
 import { flowService } from "../services/FlowService";
 import { FlowDocument } from "../../types/MessageProtocol";
 import { defaultDoc } from "../../utils/constant";
-import { produce } from "immer";
 
 export const useFlowDocument = () => {
   const [document, setDocument] = useState<FlowDocument>(defaultDoc);

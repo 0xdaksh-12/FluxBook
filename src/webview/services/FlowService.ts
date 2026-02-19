@@ -1,5 +1,5 @@
-import { Web } from "../../utils/logger";
 import { FlowDocument, WebviewMessage } from "../../types/MessageProtocol";
+import { Web } from "../../utils/logger";
 
 // Define the VS Code API type
 interface VsCodeApi {
@@ -50,11 +50,15 @@ class FlowService {
   }
 
   public update(document: FlowDocument) {
-    this.vscode.postMessage({ type: "update", document }); // sending 'update' with document
+    this.vscode.postMessage({ type: "update", document });
   }
 
   public increment() {
     this.vscode.postMessage({ type: "increment" });
+  }
+
+  public getShellConfig() {
+    this.vscode.postMessage({ type: "shellConfig" });
   }
 }
 

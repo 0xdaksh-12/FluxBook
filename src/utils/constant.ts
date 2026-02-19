@@ -1,3 +1,56 @@
+import { ShellProfile } from "../types/MessageProtocol";
+
 export const defaultDoc = {
   length: 0,
 };
+
+export const shell: ShellProfile[] = [
+  {
+    id: "cmd",
+    label: "Command Prompt",
+    command: "cmd",
+    args: ["/d", "/s", "/c"],
+  },
+  {
+    id: "powershell",
+    label: "PowerShell",
+    command: "powershell",
+    args: [
+      "-NoLogo",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-Command",
+      "& { $Host.Runspace.ThreadOptions = 'ReuseThread'; $Host.SetShouldExit(0); }",
+    ],
+  },
+  {
+    id: "pwsh",
+    label: "PowerShell Core",
+    command: "pwsh",
+    args: [
+      "-NoLogo",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-Command",
+      "& { $Host.Runspace.ThreadOptions = 'ReuseThread'; $Host.SetShouldExit(0); }",
+    ],
+  },
+  {
+    id: "bash",
+    label: "Bash",
+    command: "bash",
+    args: ["-c"],
+    ignorePath: [
+      "C:\\Windows\\System32\\bash.exe",
+      "C:\\Users\\Daksh\\AppData\\Local\\Microsoft\\WindowsApps\\bash.exe",
+    ],
+  },
+  {
+    id: "zsh",
+    label: "Zsh",
+    command: "zsh",
+    args: ["-c"],
+  },
+];
