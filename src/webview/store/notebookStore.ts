@@ -1,6 +1,3 @@
-// =============================================================================
-// notebookStore.ts
-//
 // React hook that owns the full in-memory notebook state for the webview.
 //
 // Design:
@@ -10,7 +7,6 @@
 //   - Block creation freezes the current runtimeContext into the new block.
 //   - Block completion updates runtimeContext using a sequence guard to prevent
 //     an earlier block that finishes late from overwriting newer context data.
-// =============================================================================
 
 import { useState, useCallback } from "react";
 import { produce } from "immer";
@@ -22,8 +18,7 @@ import {
 } from "../../types/MessageProtocol";
 import { generateId } from "../../utils/helper";
 
-// ─── Internal State Shape ─────────────────────────────────────────────────────
-
+// Internal State Shape
 interface NotebookState {
   blocks: FlowBlock[];
   runtimeContext: FlowContext;
@@ -31,8 +26,7 @@ interface NotebookState {
   blockSeq: number;
 }
 
-// ─── useNotebook Hook ─────────────────────────────────────────────────────────
-
+// useNotebook Hook
 export interface UseNotebookReturn {
   blocks: FlowBlock[];
   runtimeContext: FlowContext;
@@ -102,8 +96,7 @@ export function useNotebook(
     [],
   );
 
-  // ─── Block lifecycle ────────────────────────────────────────────────────────
-
+  // Block lifecycle
   /**
    * Create a new block and freeze the current runtime context into it.
    * Returns the new block's ID so the caller can dispatch an `execute` message.
