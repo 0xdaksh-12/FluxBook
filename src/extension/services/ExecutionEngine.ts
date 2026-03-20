@@ -104,8 +104,7 @@ export class ExecutionEngine {
         cwd: normalizeCwd(cwd),
         stdio: "pipe",
         windowsHide: true,
-        // detached is intentionally omitted: taskkill /f /t covers Windows
-        // process trees, and on POSIX we use SIGTERM on the process directly.
+        detached: process.platform !== "win32",
       }) as ChildProcessWithoutNullStreams;
     } catch (err: any) {
       this.callbacks.onError(
@@ -199,7 +198,7 @@ export class ExecutionEngine {
           windowsHide: true,
         });
       } else {
-        rec.process.kill("SIGTERM");
+        process.kill(-pid, "SIGTERM");
       }
     } catch (err: any) {
       Ext.error(`[ExecutionEngine] Error killing block ${blockId}:`, err);

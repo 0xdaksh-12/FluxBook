@@ -20,7 +20,7 @@ const SHELL: ResolvedShell = IS_WIN
       path: "powershell.exe",
       args: ["-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"],
     }
-  : { id: "bash", label: "Bash", path: "/usr/bin/bash", args: ["-c"] };
+  : { id: "bash", label: "Bash", path: "/usr/bin/bash", args: ["-ic"] };
 
 const CWD = os.tmpdir();
 

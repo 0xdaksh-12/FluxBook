@@ -25,6 +25,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
   - `FlowDocumentSession`: extension send `shell: null` in init context; webview restores selection from saved `id` + shell list
 - Renamed `src/utils/constant.ts` -> `src/utils/constants.ts` adhering to the rule that any source of truth must be in `constants.ts`
 - Excluded vitest configs from `tsconfig.json` to fix `rootDir` errors
+- Updated `bash` and `zsh` arguments to `["-i", "-c"]` to cleanly load user configurations (`.bashrc`, `.zshrc`, `nvm`)
+- Improved process termination on POSIX by using detached process groups (`process.kill(-pid)`) so that `SIGTERM` kills the whole tree and prevents orphans
 
 ## [0.0.1] - 2026-02-22
 

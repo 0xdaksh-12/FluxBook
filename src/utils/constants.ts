@@ -26,14 +26,14 @@ export const SHELL_PROFILES: ShellProfile[] = [
     id: "bash",
     label: "Bash",
     command: "bash",
-    args: ["-c"],
+    args: ["-i", "-c"],
     icon: "codicon-terminal-bash",
   },
   {
     id: "zsh",
     label: "Zsh",
     command: "zsh",
-    args: ["-c"],
+    args: ["-i", "-c"],
     icon: "codicon-terminal-bash",
   },
 ];
