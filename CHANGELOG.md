@@ -30,7 +30,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
   - `FlowDocumentSession`: extension send `shell: null` in init context; webview restores selection from saved `id` + shell list
 - Renamed `src/utils/constant.ts` -> `src/utils/constants.ts` adhering to the rule that any source of truth must be in `constants.ts`
 - Excluded vitest configs from `tsconfig.json` to fix `rootDir` errors
-- Reverted `bash` and `zsh` arguments back to `["-i", "-c"]` to preserve interactive environment features (e.g. aliases like `ll`) and implemented a stderr stream filter in `ExecutionEngine` to silently suppress the harmless ZLE errors (`can't change option: zle`) occurring due to the lack of a PTY.
+- Replaced `-i` (interactive) with `-l` (login) mode for `bash` and `zsh` profiles to prevent ZLE errors and unpredictable stdin handling in non-TTY environments. To retain user-specific configurations (aliases, exports) typically loaded in interactive shells, `PosixAdapter.buildWrapperCommand()` now conditionally sources `~/.bashrc` and `~/.zshrc` explicitly prior to executing commands, and uses a multi-line explicit `eval` block to ensure `shopt expand_aliases` and `setopt aliases` correctly parse the user commands.
 - Improved process termination on POSIX by using detached process groups (`process.kill(-pid)`) so that `SIGTERM` kills the whole tree and prevents orphans
 - Updated `ExecutionEngine.test.ts` to dynamically find a shell path using `ShellResolver` rather than hardcoding paths
 - Replaced the deprecated `which` command with POSIX standard `command -v` for shell resolution on Linux and macOS

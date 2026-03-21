@@ -258,14 +258,6 @@ export class ExecutionEngine {
           record.meta = parsed;
         }
       } else if (line.length > 0) {
-        // Ignore known harmless ZLE errors when forcing interactive mode without PTY
-        if (
-          type === "stderr" &&
-          (line.includes("can't change option: zle") || 
-           line.includes("widgets can only be called when ZLE is active"))
-        ) {
-          continue;
-        }
         visible.push({ type, text: line });
       }
     }
@@ -424,16 +416,23 @@ class PosixAdapter extends ShellAdapter {
     // directory-changing command propagates to the sentinel's $(pwd) capture.
     // A subshell would isolate the `cd` effect — defeating the whole point.
     return [
+      `[ -f ~/.bashrc ] && source ~/.bashrc 2>/dev/null`,
+      `[ -f ~/.zshrc ] && source ~/.zshrc 2>/dev/null`,
+      `shopt -s expand_aliases 2>/dev/null`,
+      `setopt aliases 2>/dev/null`,
+      `eval "$(cat << '__FLOW_EOF__'`,
       command,
+      `__FLOW_EOF__`,
+      `)"`,
       `__exit=$?`,
       `__cwd=$(pwd)`,
       `__branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")`,
-      // printf avoids locale-specific quoting; tr -d '\n' strips base64 line breaks
+      // printf avoids locale-specific quoting; tr -d '\\n' strips base64 line breaks
       `__json=$(printf '{"exit":%s,"cwd":"%s","branch":"%s"}' "$__exit" "$__cwd" "$__branch")`,
       `__meta=$(printf "%s" "$__json" | base64 | tr -d '\\n')`,
       `echo "${META_PREFIX}$__meta"`,
       `exit $__exit`,
-    ].join("; ");
+    ].join("\n");
   }
 
   // Launch args (e.g. -c) defined in constant.ts.
