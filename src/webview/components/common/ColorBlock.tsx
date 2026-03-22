@@ -145,13 +145,8 @@ const colors: ColorDef[] = [
   },
   {
     category: "Terminal",
-    name: "Ansi Green",
-    vscodeVar: "--vscode-terminal-ansiGreen",
-  },
-  {
-    category: "Terminal",
-    name: "Ansi Blue",
-    vscodeVar: "--vscode-terminal-ansiBlue",
+    name: "Ansi Black",
+    vscodeVar: "--vscode-terminal-ansiBlack",
   },
   {
     category: "Terminal",
@@ -160,8 +155,73 @@ const colors: ColorDef[] = [
   },
   {
     category: "Terminal",
+    name: "Ansi Green",
+    vscodeVar: "--vscode-terminal-ansiGreen",
+  },
+  {
+    category: "Terminal",
     name: "Ansi Yellow",
     vscodeVar: "--vscode-terminal-ansiYellow",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Blue",
+    vscodeVar: "--vscode-terminal-ansiBlue",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Magenta",
+    vscodeVar: "--vscode-terminal-ansiMagenta",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Cyan",
+    vscodeVar: "--vscode-terminal-ansiCyan",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi White",
+    vscodeVar: "--vscode-terminal-ansiWhite",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Bright Black",
+    vscodeVar: "--vscode-terminal-ansiBrightBlack",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Bright Red",
+    vscodeVar: "--vscode-terminal-ansiBrightRed",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Bright Green",
+    vscodeVar: "--vscode-terminal-ansiBrightGreen",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Bright Yellow",
+    vscodeVar: "--vscode-terminal-ansiBrightYellow",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Bright Blue",
+    vscodeVar: "--vscode-terminal-ansiBrightBlue",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Bright Magenta",
+    vscodeVar: "--vscode-terminal-ansiBrightMagenta",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Bright Cyan",
+    vscodeVar: "--vscode-terminal-ansiBrightCyan",
+  },
+  {
+    category: "Terminal",
+    name: "Ansi Bright White",
+    vscodeVar: "--vscode-terminal-ansiBrightWhite",
   },
 
   {

@@ -71,11 +71,9 @@ export const OutputBlock: React.FC<OutputBlockProps> = ({
     borderRadius: "6px",
     padding: "10px 12px",
     marginBottom: "2px",
-    border: isRunning
-      ? "1px solid var(--vscode-progressBar-background, #007acc)"
-      : "1px solid transparent",
-    backgroundColor: isRunning ? "rgba(0, 122, 204, 0.04)" : "transparent",
-    transition: "border-color 0.15s, background-color 0.15s",
+    border: "1px solid transparent",
+    backgroundColor: "transparent",
+    transition: "background-color 0.15s",
   };
 
   const indent = isRunning ? "10px" : undefined;
@@ -88,13 +86,11 @@ export const OutputBlock: React.FC<OutputBlockProps> = ({
         if (!isRunning) {
           e.currentTarget.style.backgroundColor =
             "var(--vscode-list-hoverBackground)";
-          e.currentTarget.style.borderColor = "var(--vscode-panel-border)";
         }
       }}
       onMouseLeave={(e) => {
         if (!isRunning) {
           e.currentTarget.style.backgroundColor = "transparent";
-          e.currentTarget.style.borderColor = "transparent";
         }
       }}
     >
@@ -222,7 +218,7 @@ export const OutputBlock: React.FC<OutputBlockProps> = ({
             fontWeight: "bold",
           }}
         >
-          [local]
+          [{block.shell?.label || "local"}]
         </span>
         {block.branch && (
           <>
@@ -294,6 +290,37 @@ export const OutputBlock: React.FC<OutputBlockProps> = ({
       {isRunning && (
         <div style={{ paddingLeft: indent }}>
           <BlockInput blockId={block.id} />
+        </div>
+      )}
+
+      {/* Execution metadata */}
+      {!isRunning && (block.exitCode !== null || block.finalCwd || block.finalBranch) && (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "12px",
+            marginTop: "8px",
+            paddingLeft: indent,
+            fontSize: "10px",
+            color: "var(--vscode-descriptionForeground)",
+            opacity: 0.7,
+            fontFamily: "var(--vscode-editor-font-family, 'JetBrains Mono', monospace)",
+            userSelect: "none",
+          }}
+        >
+          {block.exitCode !== null && (
+            <span>Exit code: {block.exitCode}</span>
+          )}
+          {(block.finalCwd && block.finalCwd !== block.cwd) && (
+            <span>CWD: {shortenPath(block.finalCwd)}</span>
+          )}
+          {(block.finalBranch && block.finalBranch !== block.branch) && (
+            <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+              <span className="codicon codicon-git-branch" style={{ fontSize: "10px" }} />
+              {block.finalBranch}
+            </span>
+          )}
         </div>
       )}
     </div>

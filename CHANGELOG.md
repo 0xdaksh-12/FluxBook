@@ -12,6 +12,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### Added
 
+- Included the complete ANSI terminal color scheme (standard and bright) in the `ColorBlock` webview component for testing and visualizing `--vscode-terminal-ansi*` variables.
+- Upgraded `OutputBlock` and `OutputArea` webview rendering layer to match a native VS Code Terminal-like UI experience.
+  - Applied semantic styling for `stdout`, `stderr`, and `stdin` streams using appropriate VS Code CSS variables.
+  - Hardcoded `ansi-to-react` HTML colors are now explicitly mapped via CSS to their native VS Code theme variables (`--vscode-terminal-ansi*`), fixing washed-out texts.
+  - Improved visual grouping in block headers and command rows, now including the resolved shell name/label.
+  - Added a new subtle execution metadata footer to surface exit codes, resulting CWD paths, and post-execution git branch changes for completed or error-state blocks.
 - Implemented a comprehensive testing strategy dividing tests into three distinct categories:
   - Unit Tests (Vitest) in `src/tests/unit` for `ExecutionEngine` and `ShellResolver`
   - Integration Tests (Vitest) in `src/tests/integration` with mocked VS Code context for `FlowDocumentSession`

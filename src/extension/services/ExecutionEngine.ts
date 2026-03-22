@@ -102,6 +102,13 @@ export class ExecutionEngine {
     try {
       proc = spawn(shell.path, args, {
         cwd: normalizeCwd(cwd),
+        env: {
+          ...process.env,
+          FORCE_COLOR: "1",
+          CLICOLOR_FORCE: "1",
+          COLORTERM: "truecolor",
+          TERM: "xterm-256color",
+        },
         stdio: "pipe",
         windowsHide: true,
         detached: process.platform !== "win32",
@@ -199,11 +206,16 @@ export class ExecutionEngine {
         });
         killer.on("close", (code) => {
           if (code !== 0) {
-            Ext.warn(`[ExecutionEngine] taskkill failed with code ${code} for block ${blockId}`);
+            Ext.warn(
+              `[ExecutionEngine] taskkill failed with code ${code} for block ${blockId}`,
+            );
           }
         });
         killer.on("error", (err) => {
-          Ext.error(`[ExecutionEngine] Failed to spawn taskkill for block ${blockId}:`, err);
+          Ext.error(
+            `[ExecutionEngine] Failed to spawn taskkill for block ${blockId}:`,
+            err,
+          );
         });
       } else {
         process.kill(-pid, "SIGTERM");
@@ -348,7 +360,10 @@ export class ExecutionEngine {
       const json = Buffer.from(encoded, "base64").toString("utf-8");
       return JSON.parse(json) as ParsedMeta;
     } catch (err: any) {
-      Ext.error(`[ExecutionEngine] Failed to parse meta payload for block ${blockId}: ${line}`, err);
+      Ext.error(
+        `[ExecutionEngine] Failed to parse meta payload for block ${blockId}: ${line}`,
+        err,
+      );
       return null;
     }
   }
@@ -429,6 +444,9 @@ class PosixAdapter extends ShellAdapter {
       `[ -f ~/.zshrc ] && source ~/.zshrc 2>/dev/null`,
       `shopt -s expand_aliases 2>/dev/null`,
       `setopt aliases 2>/dev/null`,
+      `alias ls='ls --color=always 2>/dev/null || ls -G 2>/dev/null' 2>/dev/null`,
+      `alias grep='grep --color=always' 2>/dev/null`,
+      `alias git='git -c color.ui=always' 2>/dev/null`,
       `eval "$(cat << '__FLOW_EOF__'`,
       command,
       `__FLOW_EOF__`,

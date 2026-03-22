@@ -1,6 +1,7 @@
 import React from "react";
 import Ansi from "ansi-to-react";
 import { FlowBlock, OutputLine } from "../../../types/MessageProtocol";
+import { Web } from "../../../utils/logger";
 
 interface OutputAreaProps {
   block: FlowBlock;
@@ -15,10 +16,13 @@ interface LineProps {
 const OutputLine: React.FC<LineProps> = ({ line, highlighted }) => {
   const color =
     line.type === "stderr"
-      ? "var(--vscode-testing-message-error-lineBackground, #f44747)"
+      ? "var(--vscode-testing-iconFailed, var(--vscode-terminal-ansiRed, #f14c4c))"
       : line.type === "stdin"
         ? "var(--vscode-button-background)"
         : "var(--vscode-editor-foreground)";
+
+  Web.info(`Line: ${JSON.stringify(line)}`);
+  Web.info(`HighLight: ${JSON.stringify(highlighted)}`);
 
   return (
     <div
@@ -34,7 +38,7 @@ const OutputLine: React.FC<LineProps> = ({ line, highlighted }) => {
           {line.text}
         </span>
       ) : (
-        <Ansi>{line.text}</Ansi>
+        <Ansi useClasses>{line.text}</Ansi>
       )}
     </div>
   );
@@ -90,8 +94,10 @@ export const OutputArea: React.FC<OutputAreaProps> = ({
     <div
       style={{
         marginTop: "8px",
-        paddingLeft: "8px",
-        borderLeft: "2px solid var(--vscode-panel-border)",
+        padding: "4px 8px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "2px",
         fontFamily:
           "var(--vscode-editor-font-family, 'JetBrains Mono', monospace)",
         fontSize: "12px",

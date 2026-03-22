@@ -11,6 +11,13 @@
     font-weight: var(--vscode-font-weight);
   }
 
+  code {
+    background-color: transparent !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    font-family: inherit;
+  }
+
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -35,4 +42,41 @@
   ::-webkit-scrollbar-thumb:active {
     background-color: var(--vscode-scrollbarSlider-activeBackground);
   }
+
+  /* ANSI Colors to VS Code Terminal Colors Mapping */
+  .ansi-black-fg { color: var(--vscode-terminal-ansiBlack); }
+  .ansi-red-fg { color: var(--vscode-terminal-ansiRed); }
+  .ansi-green-fg { color: var(--vscode-terminal-ansiGreen); }
+  .ansi-yellow-fg { color: var(--vscode-terminal-ansiYellow); }
+  .ansi-blue-fg { color: var(--vscode-terminal-ansiBlue); }
+  .ansi-magenta-fg { color: var(--vscode-terminal-ansiMagenta); }
+  .ansi-cyan-fg { color: var(--vscode-terminal-ansiCyan); }
+  .ansi-white-fg { color: var(--vscode-terminal-ansiWhite); }
+
+  .ansi-bright-black-fg { color: var(--vscode-terminal-ansiBrightBlack); }
+  .ansi-bright-red-fg { color: var(--vscode-terminal-ansiBrightRed); }
+  .ansi-bright-green-fg { color: var(--vscode-terminal-ansiBrightGreen); }
+  .ansi-bright-yellow-fg { color: var(--vscode-terminal-ansiBrightYellow); }
+  .ansi-bright-blue-fg { color: var(--vscode-terminal-ansiBrightBlue); }
+  .ansi-bright-magenta-fg { color: var(--vscode-terminal-ansiBrightMagenta); }
+  .ansi-bright-cyan-fg { color: var(--vscode-terminal-ansiBrightCyan); }
+  .ansi-bright-white-fg { color: var(--vscode-terminal-ansiBrightWhite); }
+
+  .ansi-black-bg { background-color: var(--vscode-terminal-ansiBlack); }
+  .ansi-red-bg { background-color: var(--vscode-terminal-ansiRed); }
+  .ansi-green-bg { background-color: var(--vscode-terminal-ansiGreen); }
+  .ansi-yellow-bg { background-color: var(--vscode-terminal-ansiYellow); }
+  .ansi-blue-bg { background-color: var(--vscode-terminal-ansiBlue); }
+  .ansi-magenta-bg { background-color: var(--vscode-terminal-ansiMagenta); }
+  .ansi-cyan-bg { background-color: var(--vscode-terminal-ansiCyan); }
+  .ansi-white-bg { background-color: var(--vscode-terminal-ansiWhite); }
+
+  .ansi-bright-black-bg { background-color: var(--vscode-terminal-ansiBrightBlack); }
+  .ansi-bright-red-bg { background-color: var(--vscode-terminal-ansiBrightRed); }
+  .ansi-bright-green-bg { background-color: var(--vscode-terminal-ansiBrightGreen); }
+  .ansi-bright-yellow-bg { background-color: var(--vscode-terminal-ansiBrightYellow); }
+  .ansi-bright-blue-bg { background-color: var(--vscode-terminal-ansiBrightBlue); }
+  .ansi-bright-magenta-bg { background-color: var(--vscode-terminal-ansiBrightMagenta); }
+  .ansi-bright-cyan-bg { background-color: var(--vscode-terminal-ansiBrightCyan); }
+  .ansi-bright-white-bg { background-color: var(--vscode-terminal-ansiBrightWhite); }
 }
