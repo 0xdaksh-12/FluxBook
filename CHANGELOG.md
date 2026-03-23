@@ -8,10 +8,14 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### Fixed
 
+- Refactored `ExecutionEngine` output handling to process stdout/stderr internally as raw `Buffer` streams instead of utf-8 chunked strings. This fixes a critical flaw where ANSI escape sequences were randomly truncated or split across data chunks during real-time emission, causing consistent CSS/style breakage in the webview. It also handles incomplete UTF-8 bytes tracking natively.
+- Removed hardcoded `--color=always | cat -v` in `ExecutionEngine.ts` to fix broken terminal color rendering and prevent raw ANSI escape codes from cluttering output.
+- Removed `-i` flag from bash and zsh shell profiles in `constants.ts` to prevent "cannot set terminal process group" and "no job control" warnings in non-TTY pipe environments.
 - Fixed git branch rendering logic in `InputSection.tsx` webview component to properly display the branch name and icon only when it is a valid string.
 
 ### Added
 
+- Native Terminal Emulator PTY integration in `ExecutionEngine`: On Unix systems (macOS/Linux), bash and zsh commands are now executed securely within a native `script` wrapper (`script -q /dev/null`). This flawlessly tricks system binaries recursively into rendering standard color strings (`isTTY=true`) natively, effectively simulating true terminal behaviors inside the engine without brittle parsing layers.
 - Included the complete ANSI terminal color scheme (standard and bright) in the `ColorBlock` webview component for testing and visualizing `--vscode-terminal-ansi*` variables.
 - Upgraded `OutputBlock` and `OutputArea` webview rendering layer to match a native VS Code Terminal-like UI experience.
   - Applied semantic styling for `stdout`, `stderr`, and `stdin` streams using appropriate VS Code CSS variables.

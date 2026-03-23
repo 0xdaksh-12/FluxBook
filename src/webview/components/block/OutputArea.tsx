@@ -99,11 +99,12 @@ export const OutputArea: React.FC<OutputAreaProps> = ({
         flexDirection: "column",
         gap: "2px",
         fontFamily:
-          "var(--vscode-editor-font-family, 'JetBrains Mono', monospace)",
+          "var(--vscode-terminal-font-family, --vscode-editor-font-family, 'Fira Code Nerd Font Mono', monospace)",
         fontSize: "12px",
         lineHeight: "1.5",
         whiteSpace: "pre-wrap",
         wordBreak: "break-all",
+        color: "var(--vscode-terminal-background)",
       }}
     >
       {block.output.map((line, i) => (

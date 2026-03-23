@@ -26,10 +26,10 @@ interface ParsedMeta {
 /** Per-process tracking record stored in the registry. */
 interface ProcessRecord {
   process: ChildProcessWithoutNullStreams;
-  /** Incomplete UTF-8 line buffered from stdout until next newline. */
-  stdoutRemainder: string;
-  /** Incomplete UTF-8 line buffered from stderr until next newline. */
-  stderrRemainder: string;
+  /** Incomplete bytes buffered from stdout until a safe split point. */
+  stdoutRemainder: Buffer;
+  /** Incomplete bytes buffered from stderr until a safe split point. */
+  stderrRemainder: Buffer;
   /** Parsed meta sentinel; populated when the wrapper emits it. */
   meta: ParsedMeta | null;
   /** True once killBlock() has been called. */
@@ -123,8 +123,8 @@ export class ExecutionEngine {
 
     const record: ProcessRecord = {
       process: proc,
-      stdoutRemainder: "",
-      stderrRemainder: "",
+      stdoutRemainder: Buffer.alloc(0),
+      stderrRemainder: Buffer.alloc(0),
       meta: null,
       isKilled: false,
       completed: false,
@@ -236,38 +236,93 @@ export class ExecutionEngine {
     this.registry.clear();
   }
 
+  /**
+   * Find a safe byte index to split a buffer such that we don't sever
+   * incomplete ANSI sequences or incomplete UTF-8 trailing bytes.
+   */
+  private findSafeSplitIndex(buf: Buffer): number {
+    const limit = Math.max(0, buf.length - 100);
+    
+    // 1. Check for incomplete ANSI escape sequences (starts with \x1b)
+    for (let i = buf.length - 1; i >= limit; i--) {
+      if (buf[i] === 0x1b) {
+        if (i + 1 < buf.length && buf[i + 1] === 0x5b) { // CSI: \x1b[
+          let complete = false;
+          for (let j = i + 2; j < buf.length; j++) {
+            const charCode = buf[j];
+            if (charCode >= 0x40 && charCode <= 0x7e) {
+              complete = true;
+              break;
+            }
+          }
+          if (!complete) {
+            return i;
+          }
+        } else if (i + 1 === buf.length) {
+          // Just \x1b at the end
+          return i;
+        }
+      }
+    }
+
+    // 2. Check for incomplete UTF-8 characters (up to 4 bytes back)
+    for (let i = buf.length - 1; i >= Math.max(0, buf.length - 4); i--) {
+      const byte = buf[i];
+      if ((byte & 0xc0) === 0x80) {
+        continue; // Continuation byte
+      } else if ((byte & 0xe0) === 0xc0) {
+        if (buf.length - i < 2) { return i; }
+        break;
+      } else if ((byte & 0xf0) === 0xe0) {
+        if (buf.length - i < 3) { return i; }
+        break;
+      } else if ((byte & 0xf8) === 0xf0) {
+        if (buf.length - i < 4) { return i; }
+        break;
+      } else {
+        break; // 1-byte ASCII or other valid start, stop checking
+      }
+    }
+
+    return buf.length;
+  }
+
   /** Attach data handlers to stdout and stderr streams. */
   private attachStreamHandlers(blockId: string, record: ProcessRecord) {
-    record.process.stdout.setEncoding("utf-8");
-    record.process.stderr.setEncoding("utf-8");
-
-    record.process.stdout.on("data", (chunk: string) => {
+    record.process.stdout.on("data", (chunk: Buffer) => {
       this.handleChunk(blockId, record, chunk, "stdout");
     });
 
-    record.process.stderr.on("data", (chunk: string) => {
+    record.process.stderr.on("data", (chunk: Buffer) => {
       this.handleChunk(blockId, record, chunk, "stderr");
     });
   }
 
   /**
    * Process an incoming data chunk from stdout or stderr.
-   * Lines are split on newlines; the last fragment (no newline yet) is held
-   * in the remainder until the next chunk or process close.
-   * Meta lines are parsed and stored; visible lines are streamed.
+   * Parses complete lines after verifying safe byte boundaries.
+   * The remainder safely stays in the byte buffer.
    */
   private handleChunk(
     blockId: string,
     record: ProcessRecord,
-    chunk: string,
+    chunk: Buffer,
     type: "stdout" | "stderr",
   ) {
     const key = type === "stdout" ? "stdoutRemainder" : "stderrRemainder";
-    record[key] += chunk;
+    record[key] = Buffer.concat([record[key], chunk]);
 
-    const lines = record[key].split(/\r?\n/);
-    // Last element is the incomplete fragment — keep it for next chunk
-    record[key] = lines.pop() ?? "";
+    const safeIndex = this.findSafeSplitIndex(record[key]);
+    if (safeIndex === 0) { return; }
+
+    const safeBuf = record[key].subarray(0, safeIndex);
+    const safeString = safeBuf.toString("utf-8");
+
+    const lines = safeString.split(/\r?\n/);
+    const incompleteLine = lines.pop() ?? "";
+    const remainingUnsafeBuf = record[key].subarray(safeIndex);
+
+    record[key] = Buffer.concat([Buffer.from(incompleteLine, "utf-8"), remainingUnsafeBuf]);
 
     const visible: OutputLine[] = [];
     for (const line of lines) {
@@ -295,17 +350,19 @@ export class ExecutionEngine {
     const toFlush: OutputLine[] = [];
 
     if (record.stdoutRemainder.length > 0) {
-      if (!record.stdoutRemainder.startsWith(META_PREFIX)) {
-        toFlush.push({ type: "stdout", text: record.stdoutRemainder });
+      const remainderString = record.stdoutRemainder.toString("utf-8");
+      if (!remainderString.startsWith(META_PREFIX)) {
+        toFlush.push({ type: "stdout", text: remainderString });
       }
-      record.stdoutRemainder = "";
+      record.stdoutRemainder = Buffer.alloc(0);
     }
 
     if (record.stderrRemainder.length > 0) {
-      if (!record.stderrRemainder.startsWith(META_PREFIX)) {
-        toFlush.push({ type: "stderr", text: record.stderrRemainder });
+      const remainderString = record.stderrRemainder.toString("utf-8");
+      if (!remainderString.startsWith(META_PREFIX)) {
+        toFlush.push({ type: "stderr", text: remainderString });
       }
-      record.stderrRemainder = "";
+      record.stderrRemainder = Buffer.alloc(0);
     }
 
     if (toFlush.length > 0) {
@@ -383,6 +440,8 @@ export class ExecutionEngine {
  *   2. Build the argument list to launch the shell binary (buildLaunchArgs).
  */
 abstract class ShellAdapter {
+  constructor(protected shellPath: string) {}
+
   /**
    * Factory method. Inspects the shell path to return the correct adapter.
    */
@@ -391,12 +450,12 @@ abstract class ShellAdapter {
       shellPath.toLowerCase().replace(/\\/g, "/").split("/").pop() ?? "";
 
     if (name.startsWith("powershell") || name.startsWith("pwsh")) {
-      return new PowerShellAdapter();
+      return new PowerShellAdapter(shellPath);
     }
     if (name === "cmd.exe" || name === "cmd") {
-      return new CmdAdapter();
+      return new CmdAdapter(shellPath);
     }
-    return new PosixAdapter();
+    return new PosixAdapter(shellPath);
   }
 
   /**
@@ -436,19 +495,16 @@ class PowerShellAdapter extends ShellAdapter {
 
 class PosixAdapter extends ShellAdapter {
   buildWrapperCommand(command: string): string {
-    // Run the user command directly (no subshell) so that `cd` and any other
-    // directory-changing command propagates to the sentinel's $(pwd) capture.
-    // A subshell would isolate the `cd` effect — defeating the whole point.
+    // Generate a temporary execution script containing the exact execution context
+    // and safe HEREDOC wrapper. This allows us to pass a clean file into the
+    // `script` PTY generator, creating robust terminal colors dynamically.
     return [
+      `__FLOW_TMP=$(mktemp "\${TMPDIR:-/tmp}/flow_cmd.XXXXXX")`,
+      `cat << '__FLOW_OUTER_EOF__' > "$__FLOW_TMP"`,
       `[ -f ~/.bashrc ] && source ~/.bashrc 2>/dev/null`,
       `[ -f ~/.zshrc ] && source ~/.zshrc 2>/dev/null`,
-      `shopt -s expand_aliases 2>/dev/null`,
-      `setopt aliases 2>/dev/null`,
-      `alias ls='ls --color=always 2>/dev/null || ls -G 2>/dev/null' 2>/dev/null`,
-      `alias grep='grep --color=always' 2>/dev/null`,
-      `alias git='git -c color.ui=always' 2>/dev/null`,
       `eval "$(cat << '__FLOW_EOF__'`,
-      command,
+      `${command}`,
       `__FLOW_EOF__`,
       `)"`,
       `__exit=$?`,
@@ -459,6 +515,21 @@ class PosixAdapter extends ShellAdapter {
       `__meta=$(printf "%s" "$__json" | base64 | tr -d '\\n')`,
       `echo "${META_PREFIX}$__meta"`,
       `exit $__exit`,
+      `__FLOW_OUTER_EOF__`,
+      ``,
+      `if command -v script >/dev/null 2>&1; then`,
+      `  if [ "$(uname)" = "Darwin" ]; then`,
+      `    script -q /dev/null "${this.shellPath}" "$__FLOW_TMP"`,
+      `  else`,
+      `    script -q -e -c "${this.shellPath} $__FLOW_TMP" /dev/null`,
+      `  fi`,
+      `  __rc=$?`,
+      `else`,
+      `  "${this.shellPath}" "$__FLOW_TMP"`,
+      `  __rc=$?`,
+      `fi`,
+      `rm -f "$__FLOW_TMP"`,
+      `exit $__rc`
     ].join("\n");
   }
 
