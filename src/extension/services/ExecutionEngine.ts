@@ -166,6 +166,9 @@ export class ExecutionEngine {
     }
     try {
       rec.process.stdin.write(text + "\n");
+      // Emit the typed text as a stdin line so the webview can append it
+      // inline onto the preceding prompt line (handled by OutputArea rendering).
+      this.callbacks.onStream(blockId, [{ type: "stdin", text }]);
     } catch (err: any) {
       Ext.error(
         `[ExecutionEngine] Failed to write input to block ${blockId}:`,

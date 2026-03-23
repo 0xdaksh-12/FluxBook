@@ -209,7 +209,7 @@ describe("ExecutionEngine", () => {
   // stdin input / writeInput echo
 
   describe("writeInput", () => {
-    it("sends text to stdin and the process receives it", () => {
+    it("sends text to stdin and emits it as a stdin-typed line", () => {
       return new Promise<void>((resolve, reject) => {
         const streams: OutputLine[] = [];
         let engine!: ExecutionEngine;
@@ -220,14 +220,10 @@ describe("ExecutionEngine", () => {
           },
           onComplete: () => {
             try {
-              // stdin is no longer echoed as a visible line — only stdout/stderr appear
+              // stdin echo is emitted so the webview can append it inline
               const stdinLines = streams.filter((l) => l.type === "stdin");
-              expect(stdinLines.length).toBe(0);
-              // cat should have echoed the input back via stdout
-              const stdoutTexts = streams
-                .filter((l) => l.type === "stdout")
-                .map((l) => l.text);
-              expect(stdoutTexts.some((t) => t.includes("hello-stdin"))).toBe(true);
+              expect(stdinLines.length).toBeGreaterThan(0);
+              expect(stdinLines[0].text).toBe("hello-stdin");
               resolve();
             } catch (e) {
               reject(e);

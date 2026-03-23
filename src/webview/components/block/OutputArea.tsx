@@ -1,28 +1,19 @@
 import React from "react";
 import Ansi from "ansi-to-react";
 import { FlowBlock, OutputLine } from "../../../types/MessageProtocol";
-import { Web } from "../../../utils/logger";
-
-interface OutputAreaProps {
-  block: FlowBlock;
-  searchQuery: string;
-}
 
 interface LineProps {
   line: OutputLine;
+  /** Text typed by the user, appended inline after the line (e.g. prompt answer). */
+  inlineInput?: string;
   highlighted: boolean;
 }
 
-const OutputLine: React.FC<LineProps> = ({ line, highlighted }) => {
+const OutputLineRow: React.FC<LineProps> = ({ line, inlineInput, highlighted }) => {
   const color =
     line.type === "stderr"
       ? "var(--vscode-testing-iconFailed, var(--vscode-terminal-ansiRed, #f14c4c))"
-      : line.type === "stdin"
-        ? "var(--vscode-button-background)"
-        : "var(--vscode-editor-foreground)";
-
-  Web.info(`Line: ${JSON.stringify(line)}`);
-  Web.info(`HighLight: ${JSON.stringify(highlighted)}`);
+      : "var(--vscode-editor-foreground)";
 
   return (
     <div
@@ -30,21 +21,78 @@ const OutputLine: React.FC<LineProps> = ({ line, highlighted }) => {
         color,
         backgroundColor: highlighted ? "rgba(255,197,0,0.15)" : "transparent",
         borderRadius: highlighted ? "2px" : undefined,
+        display: "flex",
+        flexWrap: "wrap",
       }}
     >
-      {line.type === "stdin" ? (
-        <span>
-          <span style={{ opacity: 0.6 }}>&gt; </span>
-          {line.text}
+      <Ansi useClasses>{line.text}</Ansi>
+      {inlineInput !== undefined && (
+        <span
+          style={{
+            color: "var(--vscode-button-background)",
+            marginLeft: "0.25ch",
+            opacity: 0.9,
+          }}
+        >
+          {inlineInput}
         </span>
-      ) : (
-        <Ansi useClasses>{line.text}</Ansi>
       )}
     </div>
   );
 };
 
-export const OutputArea: React.FC<OutputAreaProps> = ({
+/** Standalone row for a stdin line that has no preceding prompt to attach to. */
+const StandaloneStdinRow: React.FC<{ text: string; highlighted: boolean }> = ({
+  text,
+  highlighted,
+}) => (
+  <div
+    style={{
+      color: "var(--vscode-button-background)",
+      backgroundColor: highlighted ? "rgba(255,197,0,0.15)" : "transparent",
+      borderRadius: highlighted ? "2px" : undefined,
+    }}
+  >
+    {text}
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// Build display rows — merge each stdin line onto the preceding output line.
+// ---------------------------------------------------------------------------
+interface DisplayRow {
+  line: OutputLine;
+  inlineInput?: string;
+}
+
+function buildDisplayRows(lines: OutputLine[]): DisplayRow[] {
+  const rows: DisplayRow[] = [];
+
+  for (const line of lines) {
+    if (line.type === "stdin") {
+      if (rows.length > 0) {
+        // Append to the last row's inlineInput (handles multiple inputs)
+        const last = rows[rows.length - 1];
+        rows[rows.length - 1] = {
+          ...last,
+          inlineInput:
+            last.inlineInput !== undefined
+              ? last.inlineInput + " " + line.text
+              : line.text,
+        };
+      } else {
+        // No preceding line — render as a standalone row using a dummy stdout line
+        rows.push({ line: { type: "stdout", text: line.text } });
+      }
+    } else {
+      rows.push({ line });
+    }
+  }
+
+  return rows;
+}
+
+export const OutputArea: React.FC<{ block: FlowBlock; searchQuery: string }> = ({
   block,
   searchQuery,
 }) => {
@@ -89,6 +137,7 @@ export const OutputArea: React.FC<OutputAreaProps> = ({
   }
 
   const lowerQuery = searchQuery.toLowerCase();
+  const rows = buildDisplayRows(block.output);
 
   return (
     <div
@@ -107,15 +156,21 @@ export const OutputArea: React.FC<OutputAreaProps> = ({
         color: "var(--vscode-terminal-background)",
       }}
     >
-      {block.output.map((line, i) => (
-        <OutputLine
-          key={i}
-          line={line}
-          highlighted={
-            lowerQuery !== "" && line.text.toLowerCase().includes(lowerQuery)
-          }
-        />
-      ))}
+      {rows.map((row, i) => {
+        const highlighted =
+          lowerQuery !== "" &&
+          (row.line.text.toLowerCase().includes(lowerQuery) ||
+            (row.inlineInput?.toLowerCase().includes(lowerQuery) ?? false));
+
+        return (
+          <OutputLineRow
+            key={i}
+            line={row.line}
+            inlineInput={row.inlineInput}
+            highlighted={highlighted}
+          />
+        );
+      })}
     </div>
   );
 };
