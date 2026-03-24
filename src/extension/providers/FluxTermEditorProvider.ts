@@ -1,15 +1,15 @@
 import * as vscode from "vscode";
 import { Ext } from "../../utils/logger";
 import { getNonce } from "../../utils/helper";
-import { FlowDocumentSession } from "../services/FlowDocumentSession";
-import { FlowCustomDocument } from "../models/FlowCustomDocument";
-import { FlowDocument } from "../../types/MessageProtocol";
+import { FluxTermDocumentSession } from "../services/FluxTermDocumentSession";
+import { FluxTermCustomDocument } from "../models/FluxTermCustomDocument";
+import { FluxTermDocument } from "../../types/MessageProtocol";
 
-export class FlowEditorProvider implements vscode.CustomEditorProvider<FlowCustomDocument> {
+export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxTermCustomDocument> {
   // Map of webview panel to its session
-  private sessions = new Map<vscode.WebviewPanel, FlowDocumentSession>();
+  private sessions = new Map<vscode.WebviewPanel, FluxTermDocumentSession>();
   
-  private readonly _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentEditEvent<FlowCustomDocument>>();
+  private readonly _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentEditEvent<FluxTermCustomDocument>>();
   public readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event;
 
   constructor(private readonly context: vscode.ExtensionContext) {}
@@ -18,9 +18,9 @@ export class FlowEditorProvider implements vscode.CustomEditorProvider<FlowCusto
     uri: vscode.Uri,
     openContext: vscode.CustomDocumentOpenContext,
     _token: vscode.CancellationToken
-  ): Promise<FlowCustomDocument> {
+  ): Promise<FluxTermCustomDocument> {
     // Read initial data from disk
-    let documentData: FlowDocument = {};
+    let documentData: FluxTermDocument = {};
     try {
       const fileData = await vscode.workspace.fs.readFile(uri);
       const text = Buffer.from(fileData).toString('utf8');
@@ -28,20 +28,20 @@ export class FlowEditorProvider implements vscode.CustomEditorProvider<FlowCusto
         documentData = JSON.parse(text);
       }
     } catch (e) {
-      Ext.warn(`[FlowEditorProvider] Could not parse .flow file at ${uri.fsPath}; starting fresh`);
+      Ext.warn(`[FluxTermEditorProvider] Could not parse .ftx file at ${uri.fsPath}; starting fresh`);
       documentData = {};
     }
 
-    return new FlowCustomDocument(uri, documentData);
+    return new FluxTermCustomDocument(uri, documentData);
   }
 
   public async resolveCustomEditor(
-    document: FlowCustomDocument,
+    document: FluxTermCustomDocument,
     webviewPanel: vscode.WebviewPanel,
     _token: vscode.CancellationToken
   ): Promise<void> {
     // Create new session for this document + panel
-    const session = new FlowDocumentSession(document, webviewPanel, this.context);
+    const session = new FluxTermDocumentSession(document, webviewPanel, this.context);
     this.sessions.set(webviewPanel, session);
 
     // Setup Webview HTML
@@ -71,31 +71,31 @@ export class FlowEditorProvider implements vscode.CustomEditorProvider<FlowCusto
   }
 
   public async saveCustomDocument(
-    document: FlowCustomDocument,
+    document: FluxTermCustomDocument,
     cancellation: vscode.CancellationToken
   ): Promise<void> {
-    Ext.info(`[FlowEditorProvider] Saving document: ${document.uri.fsPath}`);
+    Ext.info(`[FluxTermEditorProvider] Saving document: ${document.uri.fsPath}`);
     await this.saveAs(document, document.uri);
   }
 
   public async saveCustomDocumentAs(
-    document: FlowCustomDocument,
+    document: FluxTermCustomDocument,
     destination: vscode.Uri,
     cancellation: vscode.CancellationToken
   ): Promise<void> {
-    Ext.info(`[FlowEditorProvider] Saving document AS: ${destination.fsPath}`);
+    Ext.info(`[FluxTermEditorProvider] Saving document AS: ${destination.fsPath}`);
     await this.saveAs(document, destination);
   }
 
   public async revertCustomDocument(
-    document: FlowCustomDocument,
+    document: FluxTermCustomDocument,
     cancellation: vscode.CancellationToken
   ): Promise<void> {
-    Ext.info(`[FlowEditorProvider] Reverting document: ${document.uri.fsPath}`);
+    Ext.info(`[FluxTermEditorProvider] Reverting document: ${document.uri.fsPath}`);
     // Re-read from disk
     const fileData = await vscode.workspace.fs.readFile(document.uri);
     const text = Buffer.from(fileData).toString('utf8');
-    let documentData: FlowDocument = {};
+    let documentData: FluxTermDocument = {};
     if (text.trim()) {
       try {
         documentData = JSON.parse(text);
@@ -114,11 +114,11 @@ export class FlowEditorProvider implements vscode.CustomEditorProvider<FlowCusto
   }
 
   public async backupCustomDocument(
-    document: FlowCustomDocument,
+    document: FluxTermCustomDocument,
     context: vscode.CustomDocumentBackupContext,
     cancellation: vscode.CancellationToken
   ): Promise<vscode.CustomDocumentBackup> {
-    Ext.info(`[FlowEditorProvider] Backing up document: ${document.uri.fsPath}`);
+    Ext.info(`[FluxTermEditorProvider] Backing up document: ${document.uri.fsPath}`);
     const backupData = Buffer.from(JSON.stringify(document.documentData, null, 2));
     await vscode.workspace.fs.writeFile(context.destination, backupData);
     return {
@@ -133,9 +133,9 @@ export class FlowEditorProvider implements vscode.CustomEditorProvider<FlowCusto
     };
   }
 
-  private async saveAs(document: FlowCustomDocument, destination: vscode.Uri): Promise<void> {
+  private async saveAs(document: FluxTermCustomDocument, destination: vscode.Uri): Promise<void> {
     // Find an active session for this document
-    let activeSession: FlowDocumentSession | undefined;
+    let activeSession: FluxTermDocumentSession | undefined;
     for (const session of this.sessions.values()) {
       if (session.document.uri.toString() === document.uri.toString()) {
         activeSession = session;
@@ -195,7 +195,7 @@ export class FlowEditorProvider implements vscode.CustomEditorProvider<FlowCusto
       <meta charset="UTF-8">
       <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webview.cspSource};">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Flow Editor</title>
+      <title>FluxTerm Editor</title>
       <link href="${styleUri}" rel="stylesheet">
       <link href="${codiconsUri}" rel="stylesheet" />
       <style>

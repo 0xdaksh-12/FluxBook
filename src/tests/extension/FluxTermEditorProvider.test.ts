@@ -4,12 +4,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 
-suite('FlowEditorProvider Test Suite', () => {
+suite('FluxTermEditorProvider Test Suite', () => {
     let testFileUri: vscode.Uri;
     
     suiteSetup(async () => {
-        // Create a temporary .flow file
-        const tempPath = path.join(os.tmpdir(), `test-${Date.now()}.flow`);
+        // Create a temporary .ftx file
+        const tempPath = path.join(os.tmpdir(), `test-${Date.now()}.ftx`);
         fs.writeFileSync(tempPath, JSON.stringify({ blocks: [] }));
         testFileUri = vscode.Uri.file(tempPath);
     });
@@ -21,15 +21,15 @@ suite('FlowEditorProvider Test Suite', () => {
         }
     });
 
-    test('Should register flow.editor custom editor and open document', async () => {
+    test('Should register fluxterm.editor custom editor and open document', async () => {
         // Ensure extension is activated
-        const ext = vscode.extensions.getExtension('undefined_publisher.flow'); // Default publisher if not specified in package.json
+        const ext = vscode.extensions.getExtension('0xflame-7.fluxterm');
         if (ext && !ext.isActive) {
             await ext.activate();
         }
 
         // Try opening the custom editor
-        await vscode.commands.executeCommand('vscode.openWith', testFileUri, 'flow.editor');
+        await vscode.commands.executeCommand('vscode.openWith', testFileUri, 'fluxterm.editor');
         
         // Give it a moment to resolve
         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -42,7 +42,7 @@ suite('FlowEditorProvider Test Suite', () => {
         assert.ok(isCustomEditor, 'Active tab should be a custom editor');
         
         if (activeTab.input instanceof vscode.TabInputCustom) {
-            assert.strictEqual(activeTab.input.viewType, 'flow.editor');
+            assert.strictEqual(activeTab.input.viewType, 'fluxterm.editor');
             assert.strictEqual(activeTab.input.uri.fsPath, testFileUri.fsPath);
         }
 

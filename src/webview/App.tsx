@@ -1,12 +1,12 @@
 import { useEffect, useRef, useCallback } from "react";
-import { useFlowDocument } from "./hooks/useFlowDocument";
+import { useFluxTermDocument } from "./hooks/useFluxTermDocument";
 import { useShellConfig } from "./hooks/useShellConfig";
 import { useNotebook } from "./store/notebookStore";
 import { useBlockExecution } from "./hooks/useBlockExecution";
 import { InputSection } from "./components/input";
 import { OutputBlock } from "./components/block";
-import { flowService } from "./services/FlowService";
-import { FlowContext, ResolvedShell } from "../types/MessageProtocol";
+import { fluxTermService } from "./services/FluxTermService";
+import { FluxTermContext, ResolvedShell } from "../types/MessageProtocol";
 
 const ANIM_CSS = `
 @keyframes spin {
@@ -30,7 +30,7 @@ export default function App() {
     context: docContext,
     updateDocument,
     saveDocument,
-  } = useFlowDocument();
+  } = useFluxTermDocument();
   const { shells, selectedShell, setSelectedShell } = useShellConfig();
 
   const {
@@ -53,7 +53,7 @@ export default function App() {
   }, [docContext, setRuntimeContext]);
 
   // After shells are resolved, restore the saved shell preference (stored as id
-  // in FlowDocument.shell). The webview matches it against the live shell list.
+  // in FluxTermDocument.shell). The webview matches it against the live shell list.
   useEffect(() => {
     if (shells.length === 0) {
       return;
@@ -97,10 +97,10 @@ export default function App() {
 
   // Handle requestSave from extension
   useEffect(() => {
-    const unsubscribe = flowService.subscribe((message: any) => {
+    const unsubscribe = fluxTermService.subscribe((message: any) => {
       if (message.type === "requestSave") {
         const d = latestDataRef.current;
-        flowService.sendSaveResponse({
+        fluxTermService.sendSaveResponse({
           ...d.document,
           blocks: d.blocks,
           runtimeContext: d.runtimeContext,
@@ -121,7 +121,7 @@ export default function App() {
 
   //  Merged context for the InputSection
   // Prefer runtime-detected values; fall back to document preferences.
-  const displayContext: FlowContext = {
+  const displayContext: FluxTermContext = {
     cwd: runtimeContext.cwd || document.cwd || "",
     branch: runtimeContext.branch ?? document.branch ?? null,
     shell: selectedShell,
@@ -139,7 +139,7 @@ export default function App() {
       displayContext.cwd,
       displayContext.branch ?? null,
     );
-    flowService.execute(blockId, cmd, shell, displayContext.cwd);
+    fluxTermService.execute(blockId, cmd, shell, displayContext.cwd);
   };
 
   const handleReRun = (blockId: string) => {
@@ -151,7 +151,7 @@ export default function App() {
     if (!newId) {
       return;
     }
-    flowService.execute(newId, orig.command, orig.shell, orig.cwd);
+    fluxTermService.execute(newId, orig.command, orig.shell, orig.cwd);
   };
 
   const handleShellChange = (shell: ResolvedShell) => {
@@ -191,7 +191,7 @@ export default function App() {
               className="codicon codicon-terminal"
               style={{ fontSize: "32px", marginBottom: "12px" }}
             />
-            <div className="text-base mb-1">Flow Notebook</div>
+            <div className="text-base mb-1">FluxTerm Notebook</div>
             <div className="text-xs">
               Type a command below to create a block
             </div>
@@ -206,7 +206,7 @@ export default function App() {
                 block={block}
                 onDelete={(id) => {
                   deleteBlock(id);
-                  flowService.markDirty();
+                  fluxTermService.markDirty();
                 }}
                 onReRun={handleReRun}
               />

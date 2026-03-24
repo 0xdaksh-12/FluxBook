@@ -8,6 +8,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### Added
 
+- **E2E Integration Testing**: Added codebase-wide E2E verifications for Python 3 interactive scripting (`stdin`, prompt handling) and native shell alias executions (`ls`, `ll`) across platforms, validating the absence of structural regressions post FluxTerm refactor.
 - **Unit Testing**: Implemented comprehensive unit tests using Vitest across ExecutionEngine (Core, Internals, Edge Cases) and utilities (Logger, ID, Nonces). Validated buffer safety (UTF8/ANSI) and ShellAdapter abstractions.
 
 ### Changed

@@ -12,7 +12,7 @@ export type BlockStatus = "idle" | "running" | "done" | "error" | "killed";
  * Shell path, cwd, and branch are frozen at creation time and never change.
  * Final values (finalCwd, finalBranch, exitCode) are populated on completion.
  */
-export interface FlowBlock {
+export interface FluxTermBlock {
   /** Unique identifier for this block. */
   id: string;
   /** Sequential display number, monotonically increasing. */
@@ -52,7 +52,7 @@ export interface FlowBlock {
  * Only updated by completed (non-killed) blocks.
  * Used to initialize the next block's frozen properties.
  */
-export interface FlowContext {
+export interface FluxTermContext {
   cwd: string;
   branch: string | null;
   /** The currently selected resolved shell, or null if not yet chosen. */
@@ -61,15 +61,15 @@ export interface FlowContext {
 }
 
 /**
- * The full notebook state serialised to the .flow file.
+ * The full notebook state serialised to the .ftx file.
  * Persistence is explicit and controlled — never triggered by streaming events.
  * Blocks and runtimeContext are optional so new/empty files parse gracefully.
  */
-export interface FlowDocument {
+export interface FluxTermDocument {
   /** Saved block list. Populated on explicit save only. */
-  blocks?: FlowBlock[];
+  blocks?: FluxTermBlock[];
   /** Saved runtime context. Populated on explicit save only. */
-  runtimeContext?: FlowContext;
+  runtimeContext?: FluxTermContext;
   /** Preferred shell path, persisted immediately on shell selection change. */
   shell?: string;
   /** Preferred starting cwd, persisted immediately on change. */
@@ -102,13 +102,13 @@ export type WebviewMessage =
   /** Request initial document state + live context from extension. */
   | { type: "init" }
   /** Explicit save: persist the full notebook state to disk. */
-  | { type: "update"; document: FlowDocument }
+  | { type: "update"; document: FluxTermDocument }
   /** Request the list of available shells on this machine. */
   | { type: "shellConfig" }
   /** Forward a webview console log to the extension output channel. */
   | { type: "log"; message: string }
   /** Respond to a requestSave with the complete current state */
-  | { type: "saveResponse"; document: FlowDocument }
+  | { type: "saveResponse"; document: FluxTermDocument }
   /** Notify the extension that the document has changed in-memory and should be marked dirty */
   | { type: "markDirty" }
   /** Start executing a command in a new isolated shell process. */
@@ -133,7 +133,7 @@ export type WebviewMessage =
 // Extension → Webview Messages
 export type ExtMessage =
   /** Initial state: saved document + live context (cwd, branch). */
-  | { type: "init"; document: FlowDocument; context: FlowContext }
+  | { type: "init"; document: FluxTermDocument; context: FluxTermContext }
   /** Available shells resolved from the host machine. */
   | { type: "shellList"; shells: ResolvedShell[] }
   /** Request the webview to send back its latest document state for saving. */

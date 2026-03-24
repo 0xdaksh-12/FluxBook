@@ -49,13 +49,13 @@ interface ProcessRecord {
  * Prefix for the base64-encoded JSON meta line emitted by the shell wrapper.
  * Must match the prefix used in each ShellAdapter.buildWrapperCommand().
  */
-const META_PREFIX = "__FLOW_META__";
+const META_PREFIX = "__FTX_META__";
 
 /**
  * Normalise a POSIX-style path (MSYS/Cygwin) to a Windows native path so that
  * Node's `spawn()` cwd option works correctly on Windows.
  *
- * e.g. "/c/Users/Daksh/projects" → "C:\Users\Daksh\projects"
+ * e.g. "/c/Users/User/projects" → "C:\Users\User\projects"
  */
 function normalizeCwd(cwdPath: string): string {
   if (process.platform === "win32") {
@@ -391,7 +391,10 @@ export class ExecutionEngine {
     // are displayed in real-time instead of stalling until the next newline.
     // Meta lines should never appear as partial segments in practice, but
     // guard against it anyway to avoid leaking sentinel text.
-    if (trailingSegment.length > 0 && !trailingSegment.startsWith(META_PREFIX)) {
+    if (
+      trailingSegment.length > 0 &&
+      !trailingSegment.startsWith(META_PREFIX)
+    ) {
       visible.push({ type, text: trailingSegment });
       // Clear the partial segment from the remainder so it is not re-emitted
       // when flushRemainders() is called on process close.
@@ -566,13 +569,13 @@ class PosixAdapter extends ShellAdapter {
     // and safe HEREDOC wrapper. This allows us to pass a clean file into the
     // `script` PTY generator, creating robust terminal colors dynamically.
     return [
-      `__FLOW_TMP=$(mktemp "\${TMPDIR:-/tmp}/flow_cmd.XXXXXX")`,
-      `cat << '__FLOW_OUTER_EOF__' > "$__FLOW_TMP"`,
+      `__FTX_TMP=$(mktemp "\${TMPDIR:-/tmp}/ftx_cmd.XXXXXX")`,
+      `cat << '__FTX_OUTER_EOF__' > "$__FTX_TMP"`,
       `[ -f ~/.bashrc ] && source ~/.bashrc 2>/dev/null`,
       `[ -f ~/.zshrc ] && source ~/.zshrc 2>/dev/null`,
-      `eval "$(cat << '__FLOW_EOF__'`,
+      `eval "$(cat << '__FTX_EOF__'`,
       `${command}`,
-      `__FLOW_EOF__`,
+      `__FTX_EOF__`,
       `)"`,
       `__exit=$?`,
       `__cwd=$(pwd)`,
@@ -582,20 +585,20 @@ class PosixAdapter extends ShellAdapter {
       `__meta=$(printf "%s" "$__json" | base64 | tr -d '\\n')`,
       `echo "${META_PREFIX}$__meta"`,
       `exit $__exit`,
-      `__FLOW_OUTER_EOF__`,
+      `__FTX_OUTER_EOF__`,
       ``,
       `if command -v script >/dev/null 2>&1; then`,
       `  if [ "$(uname)" = "Darwin" ]; then`,
-      `    script -q /dev/null "${this.shellPath}" "$__FLOW_TMP"`,
+      `    script -q /dev/null "${this.shellPath}" "$__FTX_TMP"`,
       `  else`,
-      `    script -q -e -c "${this.shellPath} $__FLOW_TMP" /dev/null`,
+      `    script -q -e -c "${this.shellPath} $__FTX_TMP" /dev/null`,
       `  fi`,
       `  __rc=$?`,
       `else`,
-      `  "${this.shellPath}" "$__FLOW_TMP"`,
+      `  "${this.shellPath}" "$__FTX_TMP"`,
       `  __rc=$?`,
       `fi`,
-      `rm -f "$__FLOW_TMP"`,
+      `rm -f "$__FTX_TMP"`,
       `exit $__rc`,
     ].join("\n");
   }
@@ -613,8 +616,8 @@ class CmdAdapter extends ShellAdapter {
       `set __exit=%ERRORLEVEL%`,
       `for /f "delims=" %%i in ('cd') do set __cwd=%%i`,
       `for /f "delims=" %%i in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set __branch=%%i`,
-      `powershell -NoProfile -Command "$obj=[ordered]@{exit=[int]'%__exit%';cwd='%__cwd%';branch='%__branch%'};$j=$obj|ConvertTo-Json -Compress;$b=[Text.Encoding]::UTF8.GetBytes($j);[Convert]::ToBase64String($b)" > "%TEMP%\\flow_meta.txt"`,
-      `set /p __meta=<"%TEMP%\\flow_meta.txt"`,
+      `powershell -NoProfile -Command "$obj=[ordered]@{exit=[int]'%__exit%';cwd='%__cwd%';branch='%__branch%'};$j=$obj|ConvertTo-Json -Compress;$b=[Text.Encoding]::UTF8.GetBytes($j);[Convert]::ToBase64String($b)" > "%TEMP%\\ftx_meta.txt"`,
+      `set /p __meta<"%TEMP%\\ftx_meta.txt"`,
       `echo ${META_PREFIX}%__meta%`,
       `exit /b %__exit%`,
     ].join(" & ");

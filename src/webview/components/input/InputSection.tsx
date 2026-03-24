@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { FlowContext, ResolvedShell } from "../../../types/MessageProtocol";
+import { FluxTermContext, ResolvedShell } from "../../../types/MessageProtocol";
 import { Web } from "../../../utils/logger";
 import { Tooltip } from "../common/Tooltip";
 
 interface InputSectionProps {
-  context: FlowContext;
+  context: FluxTermContext;
   onRun: (cmd: string) => void;
   onShellChange: (shell: ResolvedShell) => void;
   onCwdChange?: (cwd: string) => void;

@@ -1,6 +1,6 @@
 import React from "react";
 import Ansi from "ansi-to-react";
-import { FlowBlock, OutputLine } from "../../../types/MessageProtocol";
+import { FluxTermBlock, OutputLine } from "../../../types/MessageProtocol";
 
 interface LineProps {
   line: OutputLine;
@@ -96,7 +96,7 @@ function buildDisplayRows(lines: OutputLine[]): DisplayRow[] {
 }
 
 export const OutputArea: React.FC<{
-  block: FlowBlock;
+  block: FluxTermBlock;
   searchQuery: string;
 }> = ({ block, searchQuery }) => {
   if (block.output.length === 0) {

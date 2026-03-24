@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { FlowBlock } from "../../../types/MessageProtocol";
+import { FluxTermBlock } from "../../../types/MessageProtocol";
 
 interface MenuItemProps {
   icon: string;
@@ -67,7 +67,7 @@ export const MenuDivider: React.FC = () => (
 );
 
 export interface ContextMenuProps {
-  block: FlowBlock;
+  block: FluxTermBlock;
   onCopyOutput: () => void;
   onReRun: () => void;
   onKill: () => void;

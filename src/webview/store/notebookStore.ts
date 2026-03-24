@@ -11,9 +11,9 @@
 import { useState, useCallback } from "react";
 import { produce } from "immer";
 import {
-  FlowBlock,
+  FluxTermBlock,
   BlockStatus,
-  FlowContext,
+  FluxTermContext,
   OutputLine,
   ResolvedShell,
 } from "../../types/MessageProtocol";
@@ -21,16 +21,16 @@ import { generateId } from "../../utils/helper";
 
 // Internal State Shape
 interface NotebookState {
-  blocks: FlowBlock[];
-  runtimeContext: FlowContext;
+  blocks: FluxTermBlock[];
+  runtimeContext: FluxTermContext;
   /** Monotonically increasing counter; next block gets `blockSeq + 1`. */
   blockSeq: number;
 }
 
 // useNotebook Hook
 export interface UseNotebookReturn {
-  blocks: FlowBlock[];
-  runtimeContext: FlowContext;
+  blocks: FluxTermBlock[];
+  runtimeContext: FluxTermContext;
   createBlock: (
     command: string,
     shell: ResolvedShell,
@@ -48,8 +48,8 @@ export interface UseNotebookReturn {
   ) => void;
   deleteBlock: (blockId: string) => void;
   reRunBlock: (blockId: string) => string | null;
-  setRuntimeContext: (ctx: FlowContext) => void;
-  resetNotebook: (blocks: FlowBlock[], runtimeContext: FlowContext) => void;
+  setRuntimeContext: (ctx: FluxTermContext) => void;
+  resetNotebook: (blocks: FluxTermBlock[], runtimeContext: FluxTermContext) => void;
 }
 
 /**
@@ -59,8 +59,8 @@ export interface UseNotebookReturn {
  * @param initialBlocks  - Pre-existing blocks to restore (e.g. from saved file).
  */
 export function useNotebook(
-  initialContext: FlowContext,
-  initialBlocks: FlowBlock[] = [],
+  initialContext: FluxTermContext,
+  initialBlocks: FluxTermBlock[] = [],
 ): UseNotebookReturn {
   const [state, setState] = useState<NotebookState>(() => ({
     blocks: initialBlocks,
@@ -74,7 +74,7 @@ export function useNotebook(
    * Called when the extension sends the live context on init.
    * Does NOT affect any existing block's frozen properties.
    */
-  const setRuntimeContext = useCallback((ctx: FlowContext) => {
+  const setRuntimeContext = useCallback((ctx: FluxTermContext) => {
     setState((prev) =>
       produce(prev, (draft) => {
         draft.runtimeContext = ctx;
@@ -87,7 +87,7 @@ export function useNotebook(
    * Used when loading a previously saved document.
    */
   const resetNotebook = useCallback(
-    (blocks: FlowBlock[], runtimeContext: FlowContext) => {
+    (blocks: FluxTermBlock[], runtimeContext: FluxTermContext) => {
       setState({
         blocks,
         runtimeContext,
@@ -220,7 +220,7 @@ export function useNotebook(
 
   /**
    * Remove a block from the list.
-   * Running blocks should be killed first via flowService.killBlock().
+   * Running blocks should be killed first via fluxTermService.killBlock().
    */
   const deleteBlock = useCallback((blockId: string) => {
     setState((prev) =>

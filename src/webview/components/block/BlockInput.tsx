@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { flowService } from "../../services/FlowService";
+import { fluxTermService } from "../../services/FluxTermService";
 
 interface BlockInputProps {
   blockId: string;
@@ -13,7 +13,7 @@ export const BlockInput: React.FC<BlockInputProps> = ({ blockId }) => {
     if (!text) {
       return;
     }
-    flowService.sendInput(blockId, text);
+    fluxTermService.sendInput(blockId, text);
     setValue("");
   };
 

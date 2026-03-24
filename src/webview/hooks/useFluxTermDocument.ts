@@ -1,39 +1,39 @@
 import { useEffect, useState, useCallback } from "react";
 import { produce } from "immer";
-import { flowService } from "../services/FlowService";
+import { fluxTermService } from "../services/FluxTermService";
 import {
-  FlowDocument,
-  FlowContext,
-  FlowBlock,
+  FluxTermDocument,
+  FluxTermContext,
+  FluxTermBlock,
 } from "../../types/MessageProtocol";
 
-const DEFAULT_CONTEXT: FlowContext = {
+const DEFAULT_CONTEXT: FluxTermContext = {
   cwd: "",
   branch: null,
   shell: null,
   connection: "local",
 };
 
-export interface UseFlowDocumentReturn {
+export interface UseFluxTermDocumentReturn {
   /** The persisted document preferences (shell, cwd, branch) and optional saved blocks. */
-  document: FlowDocument;
+  document: FluxTermDocument;
   /** The live runtime context detected by the extension (real cwd, git branch). */
-  context: FlowContext;
+  context: FluxTermContext;
   /**
    * Update document preferences using an Immer producer.
    * Changes are immediately persisted to disk (suitable for preference fields
    * like shell selection — not for block output streaming).
    */
-  updateDocument: (producer: (draft: FlowDocument) => void) => void;
+  updateDocument: (producer: (draft: FluxTermDocument) => void) => void;
   /**
    * Explicitly save the full notebook state to disk.
    * Call this only on deliberate user save actions, not on execution events.
    */
-  saveDocument: (blocks: FlowBlock[], runtimeContext: FlowContext) => void;
+  saveDocument: (blocks: FluxTermBlock[], runtimeContext: FluxTermContext) => void;
 }
 
 /**
- * Manages document-level state: the saved FlowDocument and the live FlowContext
+ * Manages document-level state: the saved FluxTermDocument and the live FluxTermContext
  * received from the extension on init.
  *
  * Responsibilities:
@@ -45,12 +45,12 @@ export interface UseFlowDocumentReturn {
  *     auto-persist (e.g. shell selection).
  *   - Provide saveDocument() for the explicit notebook save action.
  */
-export const useFlowDocument = (): UseFlowDocumentReturn => {
-  const [document, setDocument] = useState<FlowDocument>({});
-  const [context, setContext] = useState<FlowContext>(DEFAULT_CONTEXT);
+export const useFluxTermDocument = (): UseFluxTermDocumentReturn => {
+  const [document, setDocument] = useState<FluxTermDocument>({});
+  const [context, setContext] = useState<FluxTermContext>(DEFAULT_CONTEXT);
 
   useEffect(() => {
-    const unsubscribe = flowService.subscribe((message: any) => {
+    const unsubscribe = fluxTermService.subscribe((message: any) => {
       if (message.type === "init") {
         // doc may include saved blocks/runtimeContext from a previous explicit save
         setDocument(message.document ?? {});
@@ -67,7 +67,7 @@ export const useFlowDocument = (): UseFlowDocumentReturn => {
     });
 
     // Kick-start: ask the extension for the initial state and live context.
-    flowService.init();
+    fluxTermService.init();
 
     return () => {
       unsubscribe();
@@ -79,11 +79,11 @@ export const useFlowDocument = (): UseFlowDocumentReturn => {
    * Uses an Immer producer for safe immutable updates.
    */
   const updateDocument = useCallback(
-    (producer: (draft: FlowDocument) => void) => {
+    (producer: (draft: FluxTermDocument) => void) => {
       setDocument((prev) => {
         const next = produce(prev, producer);
         // Auto-persist preference changes immediately
-        flowService.saveDocument(next);
+        fluxTermService.saveDocument(next);
         return next;
       });
     },
@@ -95,14 +95,14 @@ export const useFlowDocument = (): UseFlowDocumentReturn => {
    * This is an intentional user action — not triggered by streaming events.
    */
   const saveDocument = useCallback(
-    (blocks: FlowBlock[], runtimeContext: FlowContext) => {
+    (blocks: FluxTermBlock[], runtimeContext: FluxTermContext) => {
       setDocument((prev) => {
-        const next: FlowDocument = {
+        const next: FluxTermDocument = {
           ...prev,
           blocks,
           runtimeContext,
         };
-        flowService.saveDocument(next);
+        fluxTermService.saveDocument(next);
         return next;
       });
     },

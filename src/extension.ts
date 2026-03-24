@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
 
-import { FlowEditorProvider } from "./extension/providers/FlowEditorProvider";
+import { FluxTermEditorProvider } from "./extension/providers/FluxTermEditorProvider";
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Congratulations, your extension "flow" is now active!');
+  console.log('Congratulations, your extension "fluxterm" is now active!');
 
-  // Register the custom editor provider for .flow files
-  const provider = new FlowEditorProvider(context);
+  // Register the custom editor provider for .ftx files
+  const provider = new FluxTermEditorProvider(context);
   const editorProvider = vscode.window.registerCustomEditorProvider(
-    "flow.editor",
+    "fluxterm.editor",
     provider,
     {
       supportsMultipleEditorsPerDocument: true,
@@ -18,13 +18,13 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
 
-  // Register command to create new .flow file
+  // Register command to create new .ftx file
   const newFileCommand = vscode.commands.registerCommand(
-    "flow.newFile",
+    "fluxterm.newFile",
     async () => {
       const uri = await vscode.window.showSaveDialog({
-        filters: { "Flow Files": ["flow"] },
-        defaultUri: vscode.Uri.file("untitled.flow"),
+        filters: { "FluxTerm Files": ["ftx"] },
+        defaultUri: vscode.Uri.file("untitled.ftx"),
       });
 
       if (uri) {
@@ -33,11 +33,11 @@ export function activate(context: vscode.ExtensionContext) {
           uri,
           Buffer.from(JSON.stringify({}, null, 2)),
         );
-        // Open with Flow editor
+        // Open with FluxTerm editor
         await vscode.commands.executeCommand(
           "vscode.openWith",
           uri,
-          "flow.editor",
+          "fluxterm.editor",
         );
       }
     },
@@ -47,7 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(editorProvider, newFileCommand);
 
   // Development: Auto-reload on file changes
-  if (process.env.FLOW_DEV_RELOAD === "true") {
+  if (process.env.FLUXTERM_DEV_RELOAD === "true") {
     const watcher = vscode.workspace.createFileSystemWatcher("**/dist/**/*.js");
     watcher.onDidChange(() => {
       vscode.commands.executeCommand("workbench.action.reloadWindow");

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
-import { FlowBlock } from "../../../types/MessageProtocol";
-import { flowService } from "../../services/FlowService";
+import { FluxTermBlock } from "../../../types/MessageProtocol";
+import { fluxTermService } from "../../services/FluxTermService";
 import { StatusIcon } from "./StatusIcon";
 import { ToolbarButton } from "./ToolbarButton";
 import { ContextMenu } from "./ContextMenu";
@@ -22,7 +22,7 @@ function shortenPath(p: string): string {
 }
 
 export interface OutputBlockProps {
-  block: FlowBlock;
+  block: FluxTermBlock;
   onDelete: (id: string) => void;
   onReRun: (id: string) => void;
 }
@@ -57,7 +57,7 @@ export const OutputBlock: React.FC<OutputBlockProps> = ({
   }, [block.id, onReRun]);
 
   const handleKill = useCallback(() => {
-    flowService.killBlock(block.id);
+    fluxTermService.killBlock(block.id);
     setShowMenu(false);
   }, [block.id]);
 

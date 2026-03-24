@@ -4,19 +4,19 @@ import { exec } from "child_process";
 import { promisify } from "util";
 
 import {
-  FlowDocument,
+  FluxTermDocument,
   WebviewMessage,
   ExtMessage,
-  FlowContext,
+  FluxTermContext,
 } from "../../types/MessageProtocol";
 import { Ext } from "../../utils/logger";
 import { ShellResolver } from "./ShellResolver";
 import { ExecutionEngine } from "./ExecutionEngine";
-import { FlowCustomDocument } from "../models/FlowCustomDocument";
+import { FluxTermCustomDocument } from "../models/FluxTermCustomDocument";
 
 const execAsync = promisify(exec);
 
-export class FlowDocumentSession {
+export class FluxTermDocumentSession {
   private isDisposed = false;
   private readonly disposables: vscode.Disposable[] = [];
 
@@ -27,14 +27,14 @@ export class FlowDocumentSession {
   /** Execution engine owned by this session. */
   private readonly engine: ExecutionEngine;
 
-  private readonly _onDidUpdateDocument = new vscode.EventEmitter<FlowDocument>();
+  private readonly _onDidUpdateDocument = new vscode.EventEmitter<FluxTermDocument>();
   public readonly onDidUpdateDocument = this._onDidUpdateDocument.event;
   
-  private latestState: FlowDocument | null = null;
-  private saveResolvers: ((doc: FlowDocument) => void)[] = [];
+  private latestState: FluxTermDocument | null = null;
+  private saveResolvers: ((doc: FluxTermDocument) => void)[] = [];
 
   constructor(
-    public readonly document: FlowCustomDocument,
+    public readonly document: FluxTermCustomDocument,
     private readonly panel: vscode.WebviewPanel,
     private readonly context: vscode.ExtensionContext,
   ) {
@@ -78,11 +78,11 @@ export class FlowDocumentSession {
             const liveCwd = this.getCwd();
             const liveBranch = await this.getGitBranch(liveCwd);
 
-            const context: FlowContext = {
+            const context: FluxTermContext = {
               cwd: liveCwd,
               branch: liveBranch,
               // The extension only knows the saved shell id (a string). The
-              // webview is responsible for matching FlowDocument.shell against
+              // webview is responsible for matching FluxTermDocument.shell against
               // the live shellList to restore the selected ResolvedShell.
               shell: null,
               connection: "local",
@@ -201,20 +201,20 @@ export class FlowDocumentSession {
     this.isProcessing = false;
   }
 
-  private parseDocument(): FlowDocument {
+  private parseDocument(): FluxTermDocument {
     return this.latestState || this.document.documentData;
   }
 
   /**
    * Called by the CustomEditorProvider when the document is reverted.
    */
-  public revert(documentData: FlowDocument) {
+  public revert(documentData: FluxTermDocument) {
     this.latestState = documentData;
     // Notify the webview to re-render the reverted state
     this.enqueue(async () => {
       const liveCwd = this.getCwd();
       const liveBranch = await this.getGitBranch(liveCwd);
-      const context: FlowContext = {
+      const context: FluxTermContext = {
         cwd: liveCwd,
         branch: liveBranch,
         shell: null,
@@ -227,7 +227,7 @@ export class FlowDocumentSession {
   /**
    * Request the latest document state from the webview.
    */
-  public async getLatestDocument(): Promise<FlowDocument> {
+  public async getLatestDocument(): Promise<FluxTermDocument> {
     return new Promise((resolve) => {
       // Fallback timeout in case the webview doesn't respond
       const timer = setTimeout(() => {

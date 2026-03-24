@@ -1,29 +1,29 @@
 import * as vscode from "vscode";
-import { FlowDocument } from "../../types/MessageProtocol";
+import { FluxTermDocument } from "../../types/MessageProtocol";
 
 /**
- * Represents the in-memory state of a .flow document.
+ * Represents the in-memory state of a .ftx document.
  */
-export class FlowCustomDocument implements vscode.CustomDocument {
+export class FluxTermCustomDocument implements vscode.CustomDocument {
   private _isDisposed = false;
 
   constructor(
     private readonly _uri: vscode.Uri,
-    private _documentData: FlowDocument,
+    private _documentData: FluxTermDocument,
   ) {}
 
   public get uri(): vscode.Uri {
     return this._uri;
   }
 
-  public get documentData(): FlowDocument {
+  public get documentData(): FluxTermDocument {
     return this._documentData;
   }
 
   /**
    * Updates the in-memory document state (usually when the webview sends an "update").
    */
-  public update(newData: FlowDocument) {
+  public update(newData: FluxTermDocument) {
     this._documentData = newData;
   }
 
