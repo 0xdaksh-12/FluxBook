@@ -1,19 +1,10 @@
-<h1 align="center">
-  <br>
-  <img src="assets/icon.png" alt="FluxTerm Logo" width="128">
-  <br>
-  FluxTerm
-  <br>
-</h1>
+# FluxTerm
 
-<h4 align="center">A modern VS Code extension that reimagines the terminal experience.</h4>
+![FluxTerm Logo](https://raw.githubusercontent.com/0xflame-7/FluxTerm/main/assets/icon.png)
 
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#how-to-use">How To Use</a> •
-  <a href="#license">License</a>
-</p>
+## A modern VS Code extension that reimagines the terminal experience
+
+[Features](#features) • [Installation](#installation) • [How To Use](#how-to-use) • [License](#license)
 
 ---
 
