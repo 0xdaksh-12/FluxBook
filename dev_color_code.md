@@ -1,0 +1,52 @@
+# Color
+
+- Editor Background(--vscode-editor-background): #121314
+- Editor Foreground(--vscode-editor-foreground): #bbbebf
+- Widget Background(--vscode-editorWidget-background): #202122
+- Widget Border(--vscode-editorWidget-border): #2a2b2c
+- Input Background(--vscode-input-background): #191a1b
+- Input Foreground(--vscode-input-foreground): #bfbfbf
+- Placeholder(--vscode-input-placeholderForeground): #555555
+- Input Border(--vscode-input-border): #333536
+- Validation Info(--vscode-inputValidation-infoBackground): #1e3a47
+- Validation Warning(--vscode-inputValidation-warningBackground): #352a05
+- Validation Error(--vscode-inputValidation-errorBackground): #3a1d1d
+- Button Background(--vscode-button-background): #297aa0
+- Button Foreground(--vscode-button-foreground): #ffffff
+- Button Hover(--vscode-button-hoverBackground): #2b7da3
+- Secondary Button(--vscode-button-secondaryBackground): #121314
+- List Hover(--vscode-list-hoverBackground): #1e1f20
+- List Active(--vscode-list-activeSelectionBackground): #17262d
+- Menu Background(--vscode-menu-background): #202122
+- Menu Foreground(--vscode-menu-foreground): #bfbfbf
+- Menu Selection(--vscode-menu-selectionBackground): #17262d
+- Status Bar Bg(--vscode-statusBar-background): #191a1b
+- Status Bar Fg(--vscode-statusBar-foreground): #8c8c8c
+- Remote Bg(--vscode-statusBarItem-remoteBackground): #0078d4
+- Error Bg(--vscode-statusBarItem-errorBackground): #c72e0f
+- Terminal Background(--vscode-terminal-background): #191a1b
+- Terminal Foreground(--vscode-terminal-foreground): #cccccc
+- Ansi Black(--vscode-terminal-ansiBlack): #000000
+- Ansi Red(--vscode-terminal-ansiRed): #cd3131
+- Ansi Green(--vscode-terminal-ansiGreen): #0dbc79
+- Ansi Yellow(--vscode-terminal-ansiYellow): #e5e510
+- Ansi Blue(--vscode-terminal-ansiBlue): #2472c8
+- Ansi Magenta(--vscode-terminal-ansiMagenta): #bc3fbc
+- Ansi Cyan(--vscode-terminal-ansiCyan): #11a8cd
+- Ansi White(--vscode-terminal-ansiWhite): #e5e5e5
+- Ansi Bright Black(--vscode-terminal-ansiBrightBlack): #666666
+- Ansi Bright Red(--vscode-terminal-ansiBrightRed): #f14c4c
+- Ansi Bright Green(--vscode-terminal-ansiBrightGreen): #23d18b
+- Ansi Bright Yellow(--vscode-terminal-ansiBrightYellow): #f5f543
+- Ansi Bright Blue(--vscode-terminal-ansiBrightBlue): #3b8eea
+- Ansi Bright Magenta(--vscode-terminal-ansiBrightMagenta): #d670d6
+- Ansi Bright Cyan(--vscode-terminal-ansiBrightCyan): #29b8db
+- Ansi Bright White(--vscode-terminal-ansiBrightWhite): #e5e5e5
+- Badge Background(--vscode-badge-background): #378cb2
+- Badge Foreground(--vscode-badge-foreground): #ffffff
+- Panel Border(--vscode-panel-border): #2a2b2c
+- Sidebar Bg(--vscode-sideBar-background): #191a1b
+- Activity Bar Bg(--vscode-activityBar-background): #191a1b
+- Selection(--vscode-editor-selectionBackground): #245c74
+- Cursor(--vscode-editorCursor-foreground): #ffff4d
+- Line Highlight(--vscode-editor-lineHighlightBackground): #242526

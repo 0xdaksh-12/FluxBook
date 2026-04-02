@@ -14,6 +14,7 @@ This format follows rigorous open-source repository management standards.
 
 ### Bug Fixes
 
+- **webview**: Resolved an issue where codicons failed to load in development by conditionally resolving the webview URI based on the extension mode.
 - **engine**: Removed unintended `stdin` echoes in `writeInput` to prevent duplicate terminal outputs.
 - **engine**: Refactored the `handleChunk` stream pipeline to immediately emit trailing partial output segments. This guarantees real-time rendering of interactive prompts (e.g., Python's `input()`).
 - **engine**: Transitioned standard output accumulators from utf-8 strings to raw `Buffer` streams utilizing a custom `findSafeSplitIndex` parser. This prevents the abrupt slicing of inline ANSI escape codes across chunks.

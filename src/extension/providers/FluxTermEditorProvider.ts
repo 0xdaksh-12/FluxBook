@@ -8,13 +8,18 @@ import { FluxTermDocument } from "../../types/MessageProtocol";
 export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxTermCustomDocument> {
   // Map of webview panel to its session
   private sessions = new Map<vscode.WebviewPanel, FluxTermDocumentSession>();
-  
-  private readonly _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentEditEvent<FluxTermCustomDocument>>();
-  public readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event;
+
+  private readonly _onDidChangeCustomDocument = new vscode.EventEmitter<
+    vscode.CustomDocumentEditEvent<FluxTermCustomDocument>
+  >();
+  public readonly onDidChangeCustomDocument =
+    this._onDidChangeCustomDocument.event;
 
   constructor(private readonly context: vscode.ExtensionContext) {}
 
-  public getSessionForUri(uri: vscode.Uri): FluxTermDocumentSession | undefined {
+  public getSessionForUri(
+    uri: vscode.Uri,
+  ): FluxTermDocumentSession | undefined {
     for (const session of this.sessions.values()) {
       if (session.document.uri.toString() === uri.toString()) {
         return session;
@@ -26,18 +31,20 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
   public async openCustomDocument(
     uri: vscode.Uri,
     openContext: vscode.CustomDocumentOpenContext,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ): Promise<FluxTermCustomDocument> {
     // Read initial data from disk
     let documentData: FluxTermDocument = {};
     try {
       const fileData = await vscode.workspace.fs.readFile(uri);
-      const text = Buffer.from(fileData).toString('utf8');
+      const text = Buffer.from(fileData).toString("utf8");
       if (text.trim()) {
         documentData = JSON.parse(text);
       }
     } catch (e) {
-      Ext.warn(`[FluxTermEditorProvider] Could not parse .ftx file at ${uri.fsPath}; starting fresh`);
+      Ext.warn(
+        `[FluxTermEditorProvider] Could not parse .ftx file at ${uri.fsPath}; starting fresh`,
+      );
       documentData = {};
     }
 
@@ -47,10 +54,14 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
   public async resolveCustomEditor(
     document: FluxTermCustomDocument,
     webviewPanel: vscode.WebviewPanel,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ): Promise<void> {
     // Create new session for this document + panel
-    const session = new FluxTermDocumentSession(document, webviewPanel, this.context);
+    const session = new FluxTermDocumentSession(
+      document,
+      webviewPanel,
+      this.context,
+    );
     this.sessions.set(webviewPanel, session);
 
     // Setup Webview HTML
@@ -81,29 +92,35 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
 
   public async saveCustomDocument(
     document: FluxTermCustomDocument,
-    cancellation: vscode.CancellationToken
+    cancellation: vscode.CancellationToken,
   ): Promise<void> {
-    Ext.info(`[FluxTermEditorProvider] Saving document: ${document.uri.fsPath}`);
+    Ext.info(
+      `[FluxTermEditorProvider] Saving document: ${document.uri.fsPath}`,
+    );
     await this.saveAs(document, document.uri);
   }
 
   public async saveCustomDocumentAs(
     document: FluxTermCustomDocument,
     destination: vscode.Uri,
-    cancellation: vscode.CancellationToken
+    cancellation: vscode.CancellationToken,
   ): Promise<void> {
-    Ext.info(`[FluxTermEditorProvider] Saving document AS: ${destination.fsPath}`);
+    Ext.info(
+      `[FluxTermEditorProvider] Saving document AS: ${destination.fsPath}`,
+    );
     await this.saveAs(document, destination);
   }
 
   public async revertCustomDocument(
     document: FluxTermCustomDocument,
-    cancellation: vscode.CancellationToken
+    cancellation: vscode.CancellationToken,
   ): Promise<void> {
-    Ext.info(`[FluxTermEditorProvider] Reverting document: ${document.uri.fsPath}`);
+    Ext.info(
+      `[FluxTermEditorProvider] Reverting document: ${document.uri.fsPath}`,
+    );
     // Re-read from disk
     const fileData = await vscode.workspace.fs.readFile(document.uri);
-    const text = Buffer.from(fileData).toString('utf8');
+    const text = Buffer.from(fileData).toString("utf8");
     let documentData: FluxTermDocument = {};
     if (text.trim()) {
       try {
@@ -113,7 +130,7 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
       }
     }
     document.update(documentData);
-    
+
     // Notify all sessions attached to this document that it reverted
     for (const [panel, session] of this.sessions.entries()) {
       if (session.document.uri.toString() === document.uri.toString()) {
@@ -125,10 +142,14 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
   public async backupCustomDocument(
     document: FluxTermCustomDocument,
     context: vscode.CustomDocumentBackupContext,
-    cancellation: vscode.CancellationToken
+    cancellation: vscode.CancellationToken,
   ): Promise<vscode.CustomDocumentBackup> {
-    Ext.info(`[FluxTermEditorProvider] Backing up document: ${document.uri.fsPath}`);
-    const backupData = Buffer.from(JSON.stringify(document.documentData, null, 2));
+    Ext.info(
+      `[FluxTermEditorProvider] Backing up document: ${document.uri.fsPath}`,
+    );
+    const backupData = Buffer.from(
+      JSON.stringify(document.documentData, null, 2),
+    );
     await vscode.workspace.fs.writeFile(context.destination, backupData);
     return {
       id: context.destination.toString(),
@@ -138,11 +159,14 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
         } catch {
           // ignore error if it doesn't exist
         }
-      }
+      },
     };
   }
 
-  private async saveAs(document: FluxTermCustomDocument, destination: vscode.Uri): Promise<void> {
+  private async saveAs(
+    document: FluxTermCustomDocument,
+    destination: vscode.Uri,
+  ): Promise<void> {
     // Find an active session for this document
     let activeSession: FluxTermDocumentSession | undefined;
     for (const session of this.sessions.values()) {
@@ -185,9 +209,25 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
     const styleUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview.css"),
     );
-    const codiconsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, "dist", "codicons", "codicon.css"),
-    );
+    const codiconsUri =
+      this.context.extensionMode === vscode.ExtensionMode.Development
+        ? webview.asWebviewUri(
+            vscode.Uri.joinPath(
+              this.context.extensionUri,
+              "node_modules",
+              "@vscode/codicons",
+              "dist",
+              "codicon.css",
+            ),
+          )
+        : webview.asWebviewUri(
+            vscode.Uri.joinPath(
+              this.context.extensionUri,
+              "dist",
+              "codicons",
+              "codicon.css",
+            ),
+          );
 
     const nonce = getNonce();
 
