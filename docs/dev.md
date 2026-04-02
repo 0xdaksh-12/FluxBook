@@ -40,4 +40,19 @@ The architecture is split between three main components:
 - **VS Code Dirty State Lifecycle via CustomEditorProvider**: Refactored the core editor provider (`FluxTermEditorProvider`) to implement `CustomEditorProvider<FluxTermCustomDocument>` instead of the restricted `CustomTextEditorProvider`. Previously, every notebook block change or execution directly pushed a `WorkspaceEdit.replace()` on a hidden `TextDocument`, triggering auto-saves that bypassed standard editor behaviors. In the new architecture, `FluxTermCustomDocument` caches the JSON state entirely in-memory upon receiving `"update"` events and fires a synthetic `_onDidChangeCustomDocument` to natively toggle the editor tab's dirty dot (●). Actual disk persistence is now strictly isolated and formally delegated to VS Code's explicit `saveCustomDocument` handler (`Ctrl+S` or "Save on close"), which requests the active session to commit the cached state via WorkspaceEdit file replacement.
 - **Release 1.0.0 Preparation**: Updated `package.json` with marketplace publisher metadata, added an Apache-2.0 `LICENSE` file, generated a new application icon in `assets/icon.png`, and comprehensively updated the `README.md` and `CHANGELOG.md` to reflect the 1.0.0 release milestone.
 
-This summary provides a clear understanding of what is already stable, what is evolving, and where to contribute next.
+
+### Memory Layer and Repository Rules
+
+To ensure long-term architectural consistency, the project now maintains a **Memory Layer** (Knowledge Item) and formal **Repository Rules**.
+
+- **Memory Layer (KI)**: Located in the agent's knowledge base (`fluxterm/`), this provides high-level documentation on:
+    - **Architecture**: The Extension-Webview bridge and Custom Editor lifecycle.
+    - **Execution Engine**: Shell adapters, sentinel-based state extraction, and stream processing.
+    - **Webview**: Immer-based state management, sequence guards, and Tailwind-based UI.
+- **Repository Rules**: Consolidated in `.agent/rules/code-style-guide.md`. These rules govern:
+    - **Git Commits**: Mandatory `@CHANGELOG.md` updates and one-line commit messages.
+    - **Documentation**: Mandatory `docs/dev.md` updates after features/fixes.
+    - **Permission Model**: The Memory Layer and Rules can only be updated with explicit user permission.
+    - **Workflow Adherence**: Core logic changes must follow the `.agent/workflows/execution_engine_workflow.md`.
+
+This structure ensures that any agent or developer working on FluxTerm has immediate access to the necessary context and constraints to maintain the project's high standards.

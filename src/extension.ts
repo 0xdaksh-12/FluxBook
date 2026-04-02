@@ -22,10 +22,13 @@ export function activate(context: vscode.ExtensionContext) {
   const newFileCommand = vscode.commands.registerCommand(
     "fluxterm.newFile",
     async (uriArg?: vscode.Uri) => {
-      const uri = uriArg && uriArg instanceof vscode.Uri ? uriArg : await vscode.window.showSaveDialog({
-        filters: { "FluxTerm Files": ["ftx"] },
-        defaultUri: vscode.Uri.file("untitled.ftx"),
-      });
+      const uri =
+        uriArg && uriArg instanceof vscode.Uri
+          ? uriArg
+          : await vscode.window.showSaveDialog({
+              filters: { "FluxTerm Files": ["ftx"] },
+              defaultUri: vscode.Uri.file("untitled.ftx"),
+            });
 
       if (uri) {
         // Write default document structure
@@ -47,7 +50,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(editorProvider, newFileCommand);
 
   // Development: Auto-reload on file changes
-  if (process.env.FLUXTERM_DEV_RELOAD === "true") {
+  if (context.extensionMode === vscode.ExtensionMode.Development) {
     const watcher = vscode.workspace.createFileSystemWatcher("**/dist/**/*.js");
     watcher.onDidChange(() => {
       vscode.commands.executeCommand("workbench.action.reloadWindow");
@@ -55,7 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(watcher);
   }
 
-  // Return API for headess E2E electron testing 
+  // Return API for headess E2E electron testing
   return {
     getProvider: () => provider,
   };
