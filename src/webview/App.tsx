@@ -47,7 +47,8 @@ export default function App() {
     completeBlock,
     deleteBlock,
     deleteBlocksByDocumentId,
-    reRunBlock,
+    reRunBlockInPlace,
+    clearBlockOutput,
     setRuntimeContext,
     resetNotebook,
     spliceBlockAfter,
@@ -247,20 +248,14 @@ export default function App() {
         promoteIdleBlock(blockId, cmd, shell, orig.cwd, orig.branch ?? null);
         fluxTermService.execute(blockId, cmd, shell, orig.cwd);
       } else {
-        // done / error / killed — create a fresh block in the same document
-        const newId = createBlock(
-          cmd,
-          shell,
-          // Use the block's final cwd if available, otherwise its initial cwd
-          orig.finalCwd ?? orig.cwd,
-          orig.finalBranch ?? orig.branch,
-          orig.documentId ?? documents[0]?.id,
-        );
-        fluxTermService.execute(newId, cmd, shell, orig.finalCwd ?? orig.cwd);
+        // done / error / killed — re-run the same block in-place
+        const sameId = reRunBlockInPlace(blockId);
+        if (!sameId) return;
+        fluxTermService.execute(sameId, orig.command, orig.shell, orig.finalCwd ?? orig.cwd);
       }
       fluxTermService.markDirty();
     },
-    [blocks, promoteIdleBlock, createBlock, documents],
+    [blocks, promoteIdleBlock, reRunBlockInPlace],
   );
 
   /**
@@ -284,17 +279,26 @@ export default function App() {
     [blocks, spliceBlockAfter],
   );
 
-  /** Re-run a completed block (clone with fresh state in same doc). */
+  /** Re-run a completed block in-place (same block, preserved output + datetime separator). */
   const handleReRun = useCallback(
     (blockId: string) => {
       const orig = blocks.find((b) => b.id === blockId);
       if (!orig) return;
-      const newId = reRunBlock(blockId);
-      if (!newId) return;
-      fluxTermService.execute(newId, orig.command, orig.shell, orig.cwd);
+      const sameId = reRunBlockInPlace(blockId);
+      if (!sameId) return;
+      fluxTermService.execute(sameId, orig.command, orig.shell, orig.finalCwd ?? orig.cwd);
       fluxTermService.markDirty();
     },
-    [blocks, reRunBlock],
+    [blocks, reRunBlockInPlace],
+  );
+
+  /** Clear the visible output of a block (sets clearedAt to current output length). */
+  const handleClearOutput = useCallback(
+    (blockId: string) => {
+      clearBlockOutput(blockId);
+      fluxTermService.markDirty();
+    },
+    [clearBlockOutput],
   );
 
   // E2E test hook
@@ -369,6 +373,7 @@ export default function App() {
                   fluxTermService.markDirty();
                 }}
                 onReRun={() => handleReRun(block.id)}
+                onClearOutput={() => handleClearOutput(block.id)}
                 onAddAfter={() => handleAddAfter(block.id, doc.id)}
                 onKill={() => fluxTermService.killBlock(block.id)}
               />

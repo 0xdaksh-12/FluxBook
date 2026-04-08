@@ -1,7 +1,10 @@
 /** A single line of output produced by a running block process. */
 export interface OutputLine {
-  /** "stdout" = normal output, "stderr" = error output, "stdin" = echoed input */
-  type: "stdout" | "stderr" | "stdin";
+  /**
+   * "stdout" = normal output, "stderr" = error output, "stdin" = echoed input
+   * "separator" = synthetic datetime divider injected at run start / re-run
+   */
+  type: "stdout" | "stderr" | "stdin" | "separator";
   text: string;
 }
 
@@ -49,6 +52,20 @@ export interface FluxTermBlock {
 
   /** Unix ms timestamp of block creation. */
   createdAt: number;
+
+  /**
+   * Index into `output[]` at the moment the user clicked "clear".
+   * Lines before this index are hidden in the OutputArea.
+   * `null` means no clear has been applied.
+   */
+  clearedAt: number | null;
+
+  /**
+   * `Date.now()` at the moment clear was clicked.
+   * Used to render a synthetic datetime header before the first visible
+   * output line that arrives after a clear. `null` if never cleared.
+   */
+  clearedAtTime: number | null;
 }
 
 // Runtime Context

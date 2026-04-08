@@ -17,7 +17,9 @@ const createMockBlock = (output: any[] = [], status: any = 'done'): FluxTermBloc
     exitCode: null,
     finalCwd: null,
     finalBranch: null,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    clearedAt: null,
+    clearedAtTime: null,
 });
 
 describe('OutputArea Component', () => {

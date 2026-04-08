@@ -69,6 +69,7 @@ export const MenuDivider: React.FC = () => (
 export interface ContextMenuProps {
   block: FluxTermBlock;
   onCopyOutput: () => void;
+  onClearOutput?: () => void;
   onReRun: () => void;
   onKill: () => void;
   onDelete: () => void;
@@ -78,6 +79,7 @@ export interface ContextMenuProps {
 export const ContextMenu: React.FC<ContextMenuProps> = ({
   block,
   onCopyOutput,
+  onClearOutput,
   onReRun,
   onKill,
   onDelete,
@@ -116,7 +118,17 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       <MenuItem
         icon="codicon-copy"
         label="Copy Output"
+        disabled={block.output.length === 0}
         onClick={onCopyOutput}
+      />
+      <MenuItem
+        icon="codicon-clear-all"
+        label="Clear Output"
+        disabled={
+          block.output.length === 0 ||
+          block.output.length <= (block.clearedAt ?? 0)
+        }
+        onClick={onClearOutput ?? (() => {})}
       />
       <MenuItem icon="codicon-refresh" label="Re-run" onClick={onReRun} />
       <MenuDivider />

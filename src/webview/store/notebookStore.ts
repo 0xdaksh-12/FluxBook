@@ -50,9 +50,23 @@ export interface UseNotebookReturn {
   deleteBlock: (blockId: string) => void;
   /** Remove all blocks belonging to a given document group. */
   deleteBlocksByDocumentId: (documentId: string) => void;
-  reRunBlock: (blockId: string) => string | null;
+  /**
+   * Re-run a completed block in-place: append a datetime separator,
+   * reset to "running", and return the same block id for execute dispatch.
+   * Returns `null` if the block is not found.
+   */
+  reRunBlockInPlace: (blockId: string) => string | null;
+  /**
+   * Clear the visible output of a block.
+   * Sets `clearedAt` to the current output length and `clearedAtTime` to now.
+   * Lines before this index will be hidden in the OutputArea.
+   */
+  clearBlockOutput: (blockId: string) => void;
   setRuntimeContext: (ctx: FluxTermContext) => void;
-  resetNotebook: (blocks: FluxTermBlock[], runtimeContext: FluxTermContext) => void;
+  resetNotebook: (
+    blocks: FluxTermBlock[],
+    runtimeContext: FluxTermContext,
+  ) => void;
   /**
    * Insert a new idle block immediately after `afterBlockId`.
    * If `afterBlockId` is not found, appends to the end.
@@ -138,6 +152,12 @@ export function useNotebook(
       documentId?: string,
     ): string => {
       const id = generateId();
+      // Inject a datetime separator as the very first output line so every
+      // run (including the first) has a [Datetime] header at the top.
+      const separator: OutputLine = {
+        type: "separator",
+        text: new Date().toISOString(),
+      };
       setState((prev) =>
         produce(prev, (draft) => {
           const seq = draft.blockSeq + 1;
@@ -151,11 +171,13 @@ export function useNotebook(
             branch, // frozen at creation
             documentId,
             status: "running",
-            output: [],
+            output: [separator],
             exitCode: null,
             finalCwd: null,
             finalBranch: null,
             createdAt: Date.now(),
+            clearedAt: null,
+            clearedAtTime: null,
           });
         }),
       );
@@ -274,21 +296,61 @@ export function useNotebook(
   }, []);
 
   /**
-   * Clone a completed block into a new "running" block using the original
-   * block's frozen shell, cwd, and branch.
-   * Returns the new block ID or null if the source block is not found.
+   * Re-run a completed block **in-place** (no cloning).
+   *
+   * 1. Appends a datetime separator to the existing output so the old logs
+   *    are preserved above it.
+   * 2. Resets status → "running" and clears completion metadata.
+   * 3. Bumps seq so the sequence guard in `completeBlock` remains valid.
+   * 4. Returns the same block id — caller dispatches `fluxTermService.execute`
+   *    with this id.
+   * Returns `null` if the block is not found.
    */
-  const reRunBlock = useCallback(
-    (blockId: string): string | null => {
-      // Capture the source block properties synchronously before setState
-      const block = state.blocks.find((b) => b.id === blockId);
-      if (!block) {
-        return null;
-      }
-      return createBlock(block.command, block.shell, block.cwd, block.branch, block.documentId);
-    },
-    [state.blocks, createBlock],
-  );
+  const reRunBlockInPlace = useCallback((blockId: string): string | null => {
+    let found = false;
+    setState((prev) =>
+      produce(prev, (draft) => {
+        const block = draft.blocks.find((b) => b.id === blockId);
+        if (!block) {
+          return;
+        }
+        found = true;
+        const seq = draft.blockSeq + 1;
+        draft.blockSeq = seq;
+        // Preserve old output, append a datetime separator before new output.
+        block.output.push({
+          type: "separator",
+          text: new Date().toISOString(),
+        });
+        block.seq = seq;
+        block.status = "running";
+        block.exitCode = null;
+        block.finalCwd = null;
+        block.finalBranch = null;
+        // clearedAt / clearedAtTime are intentionally preserved.
+      }),
+    );
+    return found ? blockId : null;
+  }, []);
+
+  /**
+   * Hide all current output lines for a block.
+   *
+   * Sets `clearedAt` to the current output length — OutputArea will only
+   * render lines at or after this index. `clearedAtTime` is set to now
+   * so a datetime header can be shown before the first post-clear line.
+   */
+  const clearBlockOutput = useCallback((blockId: string): void => {
+    setState((prev) =>
+      produce(prev, (draft) => {
+        const block = draft.blocks.find((b) => b.id === blockId);
+        if (block) {
+          block.clearedAt = block.output.length;
+          block.clearedAtTime = Date.now();
+        }
+      }),
+    );
+  }, []);
 
   /**
    * Insert a new idle block immediately after `afterBlockId`.
@@ -324,6 +386,8 @@ export function useNotebook(
             finalCwd: null,
             finalBranch: null,
             createdAt: Date.now(),
+            clearedAt: null,
+            clearedAtTime: null,
           });
         }),
       );
@@ -369,7 +433,8 @@ export function useNotebook(
     completeBlock,
     deleteBlock,
     deleteBlocksByDocumentId,
-    reRunBlock,
+    reRunBlockInPlace,
+    clearBlockOutput,
     setRuntimeContext,
     resetNotebook,
     spliceBlockAfter,

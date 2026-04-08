@@ -45,6 +45,7 @@ export interface BlockProps {
   // Block-level actions (absent for ghost)
   onDelete?: () => void;
   onReRun?: () => void;
+  onClearOutput?: () => void;
   onAddAfter?: () => void;
   onKill?: () => void;
 }
@@ -62,6 +63,7 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
       onShellChange,
       onDelete,
       onReRun,
+      onClearOutput,
       onAddAfter,
       onKill,
     },
@@ -191,9 +193,14 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
           >
             <span
               className="codicon codicon-loading"
-              style={{ fontSize: "12px", animation: "spin 1.5s linear infinite" }}
+              style={{
+                fontSize: "12px",
+                animation: "spin 1.5s linear infinite",
+              }}
             />
-            <span style={{ fontSize: "11px", fontWeight: "bold" }}>Running</span>
+            <span style={{ fontSize: "11px", fontWeight: "bold" }}>
+              Running
+            </span>
           </div>
         );
       }
@@ -220,15 +227,19 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
           )}
           <div
             className="flex items-center gap-1 flex-1 px-2 min-w-0"
-            style={{ color: "var(--vscode-descriptionForeground)" }}
+            style={{ color: "var(--vscode-foreground)" }}
           >
             <span
               className="codicon codicon-folder-opened"
-              style={{ fontSize: "12px" }}
+              style={{ fontSize: "13px" }}
             />
             <span
               className="truncate"
-              style={{ color: "var(--vscode-button-background)", fontSize: "11px" }}
+              style={{
+                color: "var(--vscode-foreground)",
+                fontSize: "12px",
+                fontWeight: "600",
+              }}
             >
               {displayCwd}
             </span>
@@ -240,14 +251,24 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
     const hasOutput = (block?.output.length ?? 0) > 0;
     // Ghost block is slightly dimmed when empty to hint it is a placeholder
     const ghostDim = isGhost && !ghostCommand;
+    // Effective output count: for displaying clear button we count separator-only
+    // blocks as having output too (a fresh block always has the dt separator).
+    const hasVisibleOutput =
+      !isGhost &&
+      block !== null &&
+      block.output.length > (block.clearedAt ?? 0);
 
     return (
       <div
         ref={ref}
         className="block-card-wrapper"
-        style={{ position: "relative", width: "100%", opacity: ghostDim ? 0.55 : 1 }}
+        style={{
+          position: "relative",
+          width: "100%",
+          opacity: ghostDim ? 0.55 : 1,
+        }}
       >
-        {/* ── Floating action toolbar ── */}
+        {/* Floating action toolbar */}
         <div
           className="block-toolbar"
           style={{
@@ -270,11 +291,11 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
         >
           {/* Add */}
           <Tooltip content="Add block below">
-            <button
-              className="block-tb-btn"
-              onClick={onAddAfter}
-            >
-              <span className="codicon codicon-add" style={{ fontSize: "14px" }} />
+            <button className="block-tb-btn" onClick={onAddAfter}>
+              <span
+                className="codicon codicon-add"
+                style={{ fontSize: "14px" }}
+              />
             </button>
           </Tooltip>
 
@@ -304,6 +325,18 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
               </button>
             </Tooltip>
           ) : null}
+
+          {/* Clear output — visible whenever there is output (including while running) */}
+          {hasVisibleOutput && (
+            <Tooltip content="Clear output">
+              <button className="block-tb-btn" onClick={onClearOutput}>
+                <span
+                  className="codicon codicon-clear-all"
+                  style={{ fontSize: "14px" }}
+                />
+              </button>
+            </Tooltip>
+          )}
 
           {/* Search — only when there is output */}
           {hasOutput && (
@@ -348,10 +381,7 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
 
           {/* Drag grip (decorative) */}
           <Tooltip content="Reorder (coming soon)">
-            <button
-              className="block-tb-btn"
-              style={{ cursor: "grab" }}
-            >
+            <button className="block-tb-btn" style={{ cursor: "grab" }}>
               <span
                 className="codicon codicon-gripper"
                 style={{ fontSize: "14px" }}
@@ -393,6 +423,10 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
                   handleCopyOutput();
                   setShowContextMenu(false);
                 }}
+                onClearOutput={() => {
+                  onClearOutput?.();
+                  setShowContextMenu(false);
+                }}
                 onReRun={() => {
                   onReRun?.();
                   setShowContextMenu(false);
@@ -411,7 +445,7 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
           </div>
         </div>
 
-        {/* ── Main card ── */}
+        {/* Main card */}
         <div
           className="block-card"
           style={{
@@ -460,7 +494,9 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
                 style={{ fontSize: "14px" }}
               />
               <span style={{ fontSize: "11px", fontWeight: "bold" }}>
-                {availableShells.length === 0 ? "…" : (localShell?.label ?? "shell")}
+                {availableShells.length === 0
+                  ? "…"
+                  : (localShell?.label ?? "shell")}
               </span>
               {!isRunning && (
                 <span
@@ -503,7 +539,9 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
               readOnly={isRunning}
               rows={1}
               value={commandValue}
-              onChange={(e) => !isEditable ? undefined : setCommandValue(e.target.value)}
+              onChange={(e) =>
+                !isEditable ? undefined : setCommandValue(e.target.value)
+              }
               onKeyDown={handleKeyDown}
               placeholder={isGhost ? "Type a command..." : undefined}
               style={{
@@ -564,8 +602,8 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
             </div>
           )}
 
-          {/* Output area */}
-          {block && (isDone || isError || isRunning) && (
+          {/* Output area — shown whenever there are output lines (running OR done/error) */}
+          {block && block.output.length > 0 && (
             <div
               style={{
                 marginBottom: isDone || isError ? "4px" : 0,
