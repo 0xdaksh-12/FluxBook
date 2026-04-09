@@ -27,7 +27,7 @@ By structuring terminal output as discrete executable blocks rather than an unma
 
 ## Installation
 
-FluxTerm is available on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=0xflame-7.fluxterm) (Once Published) or you can install it from source.
+FluxTerm is available on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=0xdaksh-12.fluxterm) (Once Published) or you can install it from source.
 
 ### Install from the Marketplace
 
@@ -37,7 +37,7 @@ FluxTerm is available on the [VS Code Marketplace](https://marketplace.visualstu
 
 ### Install from Source
 
-1. Clone this repository: `git clone https://github.com/0xflame-7/FluxTerm.git`
+1. Clone this repository: `git clone https://github.com/0xdaksh-12/FluxTerm.git`
 2. Run `pnpm install` in the terminal to install dependencies.
 3. Open the repository in VS Code.
 4. Press `F5` to open a new VS Code window with the extension loaded in debug mode.
@@ -54,4 +54,4 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ---
 
-> Crafted by [0xflame-7](https://github.com/0xflame-7)
+> Crafted by [Daksh](https://github.com/0xdaksh-12)
