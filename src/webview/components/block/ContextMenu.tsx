@@ -132,7 +132,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       />
       <MenuItem
         icon="codicon-refresh"
-        label="Re-run"
+        label="Run"
         disabled={block.status === "running"}
         onClick={onReRun}
       />

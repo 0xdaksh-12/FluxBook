@@ -18,6 +18,14 @@ The architecture is split between three main components:
 
 ### Recent Fixes & Updates
 
+- **"Run" Button — Live Command & CWD (`Block.tsx`, `App.tsx`, `ContextMenu.tsx`)**
+
+  **What changed**: The toolbar "Re-run" button and context-menu "Re-run" item on completed blocks have been renamed to **"Run"**. More importantly, when clicked they now execute using the **live** textarea command and CWD editor value rather than the values frozen at last execution time.
+
+  **How**: The `onReRun` prop in `BlockProps` was widened from `() => void` to `(cmd: string, cwd: string, shell: ResolvedShell | null) => void`. Both the toolbar `onClick` and the `ContextMenu`'s `onReRun` callback now call `onReRun(commandValue, localCwd, localShell)` — where `commandValue` is whatever the user has typed in the textarea, `localCwd` is the value committed via `CwdEditor`, and `localShell` is the currently selected shell in the block's dropdown. In `App.tsx`, `handleReRun` accepts `(blockId, cmd, cwd, shell)` and uses them all in `fluxTermService.execute`. The `onRunAll` path uses `block.command`, `block.finalCwd ?? block.cwd`, and `block.shell` as the best available defaults since it cannot access each block's local React state.
+
+  **Files changed**: `src/webview/components/block/Block.tsx` — prop signature, tooltip, onClick (now passes `localShell`); `src/webview/components/block/ContextMenu.tsx` — label; `src/webview/App.tsx` — `handleReRun` signature and all call sites.
+
 - **CWD Autocomplete Dropdown Portal Fix (`CwdEditor.tsx`)**
 
   **Problem**: The autocomplete dropdown that appears when the user double-clicks the CWD path and starts typing was being silently clipped and never fully visible. The root cause is that `.block-card` (the main card wrapper in `Block.tsx`) sets `overflow: hidden` on its container div (line ~498). The dropdown used `position: absolute; top: calc(100% + 2px)` relative to its wrapper inside the context bar — which sits inside the clipping context.
@@ -52,14 +60,13 @@ The architecture is split between three main components:
 
   **App wiring** (`App.tsx`): All `onSubmit` handlers now accept the optional `cwdOverride` parameter. The effective CWD for execution is `cwdOverride ?? orig.finalCwd ?? orig.cwd`. Ghost blocks use new `ghostCwds` (per-document) and `ghostDocCwd` state. Real idle blocks call `updateBlockCwd` on `onCwdChange`.
 
- The previous two-zone model — a scrollable output history list (`OutputBlock`) combined with a fixed bottom input bar (`InputSection`) — is replaced by a continuous notebook model where every command block is a self-contained card.
+The previous two-zone model — a scrollable output history list (`OutputBlock`) combined with a fixed bottom input bar (`InputSection`) — is replaced by a continuous notebook model where every command block is a self-contained card.
 
 - **Re-run In-Place and Clear Output**:
   - Re-running an existing block now executes **in-place** rather than spawning an identical visual clone of the original block. `notebookStore.ts` now uses `reRunBlockInPlace()` to bump the block sequence internally, reset its metadata flags to `"running"`, and cleanly inject a `[Datetime]` separator type entry (`OutputLine`) directly into the `output` array buffer. This cleanly preserves previous log histories in terminal views without duplicating physical elements on the DOM.
   - A contextual "Clear Output" action via the floating block sidebar (or ContextMenu) is now supported. Because clearing must support actively running commands dynamically, it operates non-destructively: it stores a numerical `clearedAt` index tracking the absolute array cutoff length inside the store (`FluxTermBlock`), selectively slicing `.slice(clearedAt)` inside `OutputArea.tsx`. If streams continue to populate bytes natively afterward, a synthesized header timestamp is automatically injected.
 
 - **Four Targeted Bug Fixes:**
-
   1. **[P1] BlockDocument name persistence** — `onGroupNameChange` in `BlockDocument.tsx` was never connected to the store. Fixed by: (a) Adding a `documents?: BlockDocumentMeta[]` array to `FluxTermDocument` (in `MessageProtocol.ts`); (b) Each block now carries an optional `documentId?: string` field; (c) `App.tsx` maintains a `documents` state array and passes `onGroupNameChange={(name) => handleDocumentRename(doc.id, name)}` which calls `updateDocument((draft) => { draft.documents = updated })` for immediate persistence; (d) `requestSave` handler includes `documents` in the `saveResponse` payload. On restore, `documents` is read from `document.documents` in the post-init `useEffect`.
 
   2. **[P2] Ghost BlockDocument** — Previously the ghost was a `Block` inside the single `BlockDocument`. Now there is always a second `BlockDocument` rendered below all real documents, marked `isGhost={true}`. This ghost document is visually dimmed (`opacity: 0.5`), shows an italic non-editable placeholder name, hides the "Run All" button (`!isGhost` guard), and contains a ghost `Block` for command entry. When the user submits in the ghost doc, `handleGhostDocSubmit` creates a new `BlockDocumentMeta` entry (with a `generateId()` id) and calls `createBlock(..., newDocId)` so the first block is immediately assigned to the new real document. The ghost document itself is never stored.
@@ -67,7 +74,6 @@ The architecture is split between three main components:
   3. **[P3] Scrolling** — The old `App.tsx` root used `className="h-screen"` (Tailwind: `height: 100vh`) combined with `overflow-y: auto`, which created a fixed-height internal scroller that VS Code's webview did not propagate. Fixed by removing `h-screen` and setting `minHeight: "100%"` on the root div, and adding `html, body { height: 100%; overflow-y: auto; }` to `styles.css`. The VS Code webview host already scrolls the frame; the content now grows naturally.
 
   4. **[P4] Output height cap** — `OutputArea.tsx` output container now has `maxHeight: "300px"` + `overflowY: "auto"`. This caps tall outputs and adds an internal scrollbar. The color was also corrected from `--vscode-terminal-background` (a background token mistakenly used as foreground) to `--vscode-terminal-foreground, var(--vscode-editor-foreground)`.
-
 
   The new core component is `Block.tsx` (`src/webview/components/block/Block.tsx`). It is polymorphic: it renders as a ghost block (isGhost=true, backed by local state in App.tsx), an idle store block (block.status==="idle", created by the Add action), or a live block (running/done/error/killed). A single card contains: (1) a context bar (28px) showing the shell selector on the left and — conditionally on status — a branch+cwd display or a spinning "Running" indicator; (2) a self-resizing textarea with a `$` prompt and an arrow-right submit button; (3) an output area reusing the unchanged `OutputArea.tsx`; (4) a stdin input row reusing `BlockInput.tsx` when running; (5) an execution metadata footer showing exit code, final cwd, and branch changes.
 
@@ -83,7 +89,8 @@ The architecture is split between three main components:
 
   CSS: `.block-card-wrapper:hover .block-toolbar` and `.block-tb-btn` rules were added to `src/webview/styles.css` inside `@layer base`, removing the need for the runtime-injected `ANIM_CSS` block-toolbar rule. `App.tsx` retains only the `spin` and `blink` keyframe injections.
 
- This major architecture update eliminates duplicate hardcoded UI chunks and aligns visually with VS Code native interfaces. Crucial states (e.g., `idle`, `running`, `done`) are deeply mocked, integrating responsive context bar UI swaps (Branch/Path to Running Indicator), `codicon-debug-stop` toolbar execution controls, native `ansi-to-react` execution block styling complete with precision mathematical layouts (flush-left alignment, identical padding/gaps), and simulated STDIN interactive blockers using native `requiresInput` prompts copied directly from `BlockInput.tsx`.
+This major architecture update eliminates duplicate hardcoded UI chunks and aligns visually with VS Code native interfaces. Crucial states (e.g., `idle`, `running`, `done`) are deeply mocked, integrating responsive context bar UI swaps (Branch/Path to Running Indicator), `codicon-debug-stop` toolbar execution controls, native `ansi-to-react` execution block styling complete with precision mathematical layouts (flush-left alignment, identical padding/gaps), and simulated STDIN interactive blockers using native `requiresInput` prompts copied directly from `BlockInput.tsx`.
+
 - **Storybook ESM Resolution Fix (`vsTheme.mts`)**: `vsTheme.ts` was renamed to `vsTheme.mts` to resolve a TypeScript `resolution-mode` error. The root cause is a module system mismatch: the root `tsconfig.json` uses `"module": "Node16"` + `"moduleResolution": "Node16"`, which determines CJS vs ESM mode from the file extension and `package.json#type`. Since `package.json` omits `"type": "module"`, all `.ts` files default to CommonJS. Importing types from `@storybook/react-vite` (a pure ESM package) inside a CJS-classified file is rejected by Node16 resolution. The `.mts` extension is a TypeScript convention that unconditionally marks a file as ESM regardless of `package.json`, eliminating the ambiguity. The `.storybook/tsconfig.json` include globs were also updated to add `**/*.mts` patterns, ensuring the language server correctly resolves the renamed file.
 
 - **Webview Codicon Loading**: Fixed an issue where the Codicons URI for `@vscode/codicons` failed to resolve locally during development. Used `context.extensionMode` to cleanly switch between bundled `dist` paths for production and direct `node_modules` paths for development testing.
@@ -109,19 +116,18 @@ The architecture is split between three main components:
 - **VS Code Dirty State Lifecycle via CustomEditorProvider**: Refactored the core editor provider (`FluxTermEditorProvider`) to implement `CustomEditorProvider<FluxTermCustomDocument>` instead of the restricted `CustomTextEditorProvider`. Previously, every notebook block change or execution directly pushed a `WorkspaceEdit.replace()` on a hidden `TextDocument`, triggering auto-saves that bypassed standard editor behaviors. In the new architecture, `FluxTermCustomDocument` caches the JSON state entirely in-memory upon receiving `"update"` events and fires a synthetic `_onDidChangeCustomDocument` to natively toggle the editor tab's dirty dot (●). Actual disk persistence is now strictly isolated and formally delegated to VS Code's explicit `saveCustomDocument` handler (`Ctrl+S` or "Save on close"), which requests the active session to commit the cached state via WorkspaceEdit file replacement.
 - **Release 1.0.0 Preparation**: Updated `package.json` with marketplace publisher metadata, added an Apache-2.0 `LICENSE` file, generated a new application icon in `assets/icon.png`, and comprehensively updated the `README.md` and `CHANGELOG.md` to reflect the 1.0.0 release milestone.
 
-
 ### Memory Layer and Repository Rules
 
 To ensure long-term architectural consistency, the project now maintains a **Memory Layer** (Knowledge Item) and formal **Repository Rules**.
 
 - **Memory Layer (KI)**: Located in the agent's knowledge base (`fluxterm/`), this provides high-level documentation on:
-    - **Architecture**: The Extension-Webview bridge and Custom Editor lifecycle.
-    - **Execution Engine**: Shell adapters, sentinel-based state extraction, and stream processing.
-    - **Webview**: Immer-based state management, sequence guards, and Tailwind-based UI.
+  - **Architecture**: The Extension-Webview bridge and Custom Editor lifecycle.
+  - **Execution Engine**: Shell adapters, sentinel-based state extraction, and stream processing.
+  - **Webview**: Immer-based state management, sequence guards, and Tailwind-based UI.
 - **Repository Rules**: Consolidated in `.agent/rules/code-style-guide.md`. These rules govern:
-    - **Git Commits**: Mandatory `@CHANGELOG.md` updates and one-line commit messages.
-    - **Documentation**: Mandatory `docs/dev.md` updates after features/fixes.
-    - **Permission Model**: The Memory Layer and Rules can only be updated with explicit user permission.
-    - **Workflow Adherence**: Core logic changes must follow the `.agent/workflows/execution_engine_workflow.md`.
+  - **Git Commits**: Mandatory `@CHANGELOG.md` updates and one-line commit messages.
+  - **Documentation**: Mandatory `docs/dev.md` updates after features/fixes.
+  - **Permission Model**: The Memory Layer and Rules can only be updated with explicit user permission.
+  - **Workflow Adherence**: Core logic changes must follow the `.agent/workflows/execution_engine_workflow.md`.
 
 This structure ensures that any agent or developer working on FluxTerm has immediate access to the necessary context and constraints to maintain the project's high standards.

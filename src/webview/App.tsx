@@ -313,19 +313,15 @@ export default function App() {
     [blocks, spliceBlockAfter],
   );
 
-  /** Re-run a completed block in-place (same block, preserved output + datetime separator). */
+  /** Run a completed block in-place using the command/cwd/shell provided by Block's local state. */
   const handleReRun = useCallback(
-    (blockId: string) => {
+    (blockId: string, cmd: string, cwd: string, shell: ResolvedShell | null) => {
+      if (!shell) return;
       const orig = blocks.find((b) => b.id === blockId);
       if (!orig) return;
       const sameId = reRunBlockInPlace(blockId);
       if (!sameId) return;
-      fluxTermService.execute(
-        sameId,
-        orig.command,
-        orig.shell,
-        orig.finalCwd ?? orig.cwd,
-      );
+      fluxTermService.execute(sameId, cmd, shell, cwd);
       fluxTermService.markDirty();
     },
     [blocks, reRunBlockInPlace],
@@ -399,7 +395,9 @@ export default function App() {
             onRunAll={() => {
               docBlocks
                 .filter((b) => b.status === "done" || b.status === "error")
-                .forEach((b) => handleReRun(b.id));
+                .forEach((b) =>
+                  handleReRun(b.id, b.command, b.finalCwd ?? b.cwd, b.shell),
+                );
             }}
             onDelete={() => handleDeleteDocument(doc.id)}
           >
@@ -420,7 +418,7 @@ export default function App() {
                   deleteBlock(block.id);
                   fluxTermService.markDirty();
                 }}
-                onReRun={() => handleReRun(block.id)}
+                onReRun={(cmd, cwd, shell) => handleReRun(block.id, cmd, cwd, shell)}
                 onClearOutput={() => handleClearOutput(block.id)}
                 onAddAfter={() => handleAddAfter(block.id, doc.id)}
                 onKill={() => fluxTermService.killBlock(block.id)}

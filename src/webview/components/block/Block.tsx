@@ -51,7 +51,7 @@ export interface BlockProps {
 
   // Block-level actions (absent for ghost)
   onDelete?: () => void;
-  onReRun?: () => void;
+  onReRun?: (cmd: string, cwd: string, shell: ResolvedShell | null) => void;
   onClearOutput?: () => void;
   onAddAfter?: () => void;
   onKill?: () => void;
@@ -359,8 +359,11 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
               </button>
             </Tooltip>
           ) : !isGhost && (isDone || isError || isKilled) ? (
-            <Tooltip content="Re-run">
-              <button className="block-tb-btn" onClick={onReRun}>
+            <Tooltip content="Run">
+              <button
+                className="block-tb-btn"
+                onClick={() => onReRun?.(commandValue, localCwd, localShell)}
+              >
                 <span
                   className="codicon codicon-refresh"
                   style={{ fontSize: "14px" }}
@@ -471,7 +474,7 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
                   setShowContextMenu(false);
                 }}
                 onReRun={() => {
-                  onReRun?.();
+                  onReRun?.(commandValue, localCwd, localShell);
                   setShowContextMenu(false);
                 }}
                 onKill={() => {
