@@ -13,6 +13,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { fluxTermService } from "../../services/FluxTermService";
 
 // Helpers
@@ -82,6 +83,8 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
   const [activeIndex, setActiveIndex] = useState(-1);
   const [showFlash, setShowFlash] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  // Portal positioning: bounding rect of the input element
+  const [dropdownRect, setDropdownRect] = useState<DOMRect | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -103,7 +106,7 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
       // Immediately fetch suggestions for the current value
       triggerAutocomplete(inputRef.current.value);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditing]);
 
   const triggerAutocomplete = useCallback((value: string) => {
@@ -111,6 +114,10 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
     debounceRef.current = setTimeout(async () => {
       const queryDir = dirForQuery(value);
       const entries = await fluxTermService.listDir(queryDir);
+      // Refresh position every time suggestions are about to show
+      if (inputRef.current) {
+        setDropdownRect(inputRef.current.getBoundingClientRect());
+      }
       setSuggestions(entries);
       setActiveIndex(-1);
     }, 150);
@@ -139,9 +146,7 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
       setIsValidating(true);
 
       // Validate: list the parent directory and confirm the leaf exists.
-      const normalized = trimmed.endsWith("/")
-        ? trimmed.slice(0, -1)
-        : trimmed;
+      const normalized = trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
       const lastSlash = normalized.lastIndexOf("/");
       const parentDir = lastSlash <= 0 ? "/" : normalized.slice(0, lastSlash);
       const leafName = normalized.slice(lastSlash + 1);
@@ -224,7 +229,11 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
 
     if (e.key === "Enter") {
       e.preventDefault();
-      if (hasSuggestions && activeIndex >= 0 && filteredSuggestions[activeIndex]) {
+      if (
+        hasSuggestions &&
+        activeIndex >= 0 &&
+        filteredSuggestions[activeIndex]
+      ) {
         selectSuggestion(filteredSuggestions[activeIndex]);
         return;
       }
@@ -258,15 +267,19 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
     setIsEditing(true);
   };
 
-  // ── Render: edit mode ──────────────────────────────────────────────────────
+  // Render: edit mode
 
   if (isEditing) {
     return (
       <div
         ref={wrapperRef}
         style={{ position: "relative", flex: 1, minWidth: 0 }}
-        onFocus={() => { focusInsideRef.current = true; }}
-        onBlur={() => { focusInsideRef.current = false; }}
+        onFocus={() => {
+          focusInsideRef.current = true;
+        }}
+        onBlur={() => {
+          focusInsideRef.current = false;
+        }}
       >
         {/* Input row */}
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
@@ -305,77 +318,84 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
           )}
         </div>
 
-        {/* Autocomplete dropdown — rendered inline, absolutely positioned */}
-        {filteredSuggestions.length > 0 && (
-          <div
-            // mousedown fires before blur; setting focusInsideRef true here
-            // prevents the blur handler from closing the editor
-            onMouseDown={() => { focusInsideRef.current = true; }}
-            style={{
-              position: "absolute",
-              top: "calc(100% + 2px)",
-              left: 0,
-              right: 0,
-              zIndex: 9999,
-              backgroundColor: "var(--vscode-menu-background)",
-              border: "1px solid var(--vscode-menu-border, var(--vscode-panel-border))",
-              borderRadius: "4px",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-              maxHeight: "180px",
-              overflowY: "auto",
-              padding: "2px 0",
-              fontFamily: "var(--vscode-editor-font-family, monospace)",
-              fontSize: "11px",
-            }}
-          >
-            {filteredSuggestions.map((entry, i) => {
-              const isActive = i === activeIndex;
-              const { segment } = splitPath(inputValue);
-              return (
-                <div
-                  key={entry}
-                  onMouseDown={(e) => {
-                    // Prevent blur from firing before click is handled
-                    e.preventDefault();
-                    selectSuggestion(entry);
-                  }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "3px 10px",
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    backgroundColor: isActive
-                      ? "var(--vscode-menu-selectionBackground)"
-                      : "transparent",
-                    color: isActive
-                      ? "var(--vscode-menu-selectionForeground)"
-                      : "var(--vscode-menu-foreground)",
-                  }}
-                  onMouseEnter={() => setActiveIndex(i)}
-                >
-                  <span
-                    className="codicon codicon-folder"
-                    style={{ fontSize: "11px", flexShrink: 0, opacity: 0.75 }}
-                  />
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                    <strong>{segment}</strong>
-                    {entry.slice(segment.length)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {/* Autocomplete dropdown — portalled to body to escape overflow:hidden */}
+        {filteredSuggestions.length > 0 &&
+          dropdownRect &&
+          createPortal(
+            <div
+              // mousedown fires before blur; setting focusInsideRef true here
+              // prevents the blur handler from closing the editor
+              onMouseDown={() => {
+                focusInsideRef.current = true;
+              }}
+              style={{
+                position: "fixed",
+                top: dropdownRect.bottom + 2,
+                left: dropdownRect.left,
+                width: dropdownRect.width,
+                zIndex: 9999,
+                backgroundColor: "var(--vscode-menu-background)",
+                border:
+                  "1px solid var(--vscode-menu-border, var(--vscode-panel-border))",
+                borderRadius: "4px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+                maxHeight: "180px",
+                overflowY: "auto",
+                padding: "2px 0",
+                fontFamily: "var(--vscode-editor-font-family, monospace)",
+                fontSize: "11px",
+              }}
+            >
+              {filteredSuggestions.map((entry, i) => {
+                const isActive = i === activeIndex;
+                const { segment } = splitPath(inputValue);
+                return (
+                  <div
+                    key={entry}
+                    onMouseDown={(e) => {
+                      // Prevent blur from firing before click is handled
+                      e.preventDefault();
+                      selectSuggestion(entry);
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "3px 10px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      backgroundColor: isActive
+                        ? "var(--vscode-menu-selectionBackground)"
+                        : "transparent",
+                      color: isActive
+                        ? "var(--vscode-menu-selectionForeground)"
+                        : "var(--vscode-menu-foreground)",
+                    }}
+                    onMouseEnter={() => setActiveIndex(i)}
+                  >
+                    <span
+                      className="codicon codicon-folder"
+                      style={{ fontSize: "11px", flexShrink: 0, opacity: 0.75 }}
+                    />
+                    <span
+                      style={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                    >
+                      <strong>{segment}</strong>
+                      {entry.slice(segment.length)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>,
+            document.body,
+          )}
       </div>
     );
   }
 
-  // ── Render: display mode ───────────────────────────────────────────────────
-
+  // Render: display mode
   return (
     <div
       style={{
@@ -388,11 +408,7 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
     >
       <FlashTooltip visible={showFlash} />
       <span
-        title={
-          readOnly
-            ? cwd
-            : "Double-click to edit · Ctrl+click to copy"
-        }
+        title={readOnly ? cwd : "Double-click to edit | Ctrl+click to copy"}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         style={{

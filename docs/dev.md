@@ -18,6 +18,14 @@ The architecture is split between three main components:
 
 ### Recent Fixes & Updates
 
+- **CWD Autocomplete Dropdown Portal Fix (`CwdEditor.tsx`)**
+
+  **Problem**: The autocomplete dropdown that appears when the user double-clicks the CWD path and starts typing was being silently clipped and never fully visible. The root cause is that `.block-card` (the main card wrapper in `Block.tsx`) sets `overflow: hidden` on its container div (line ~498). The dropdown used `position: absolute; top: calc(100% + 2px)` relative to its wrapper inside the context bar — which sits inside the clipping context.
+
+  **Fix**: The dropdown is now rendered via `createPortal(…, document.body)` at `position: fixed` coordinates, exactly mirroring how the shell selector dropdown is already handled in `Block.tsx`. A new `dropdownRect` state (`DOMRect | null`) stores the bounding rect of the `<input>` element. The rect is refreshed inside `triggerAutocomplete` (every debounce cycle, just before `setSuggestions`) via `inputRef.current.getBoundingClientRect()`. The portalled div uses `top: dropdownRect.bottom + 2`, `left: dropdownRect.left`, and `width: dropdownRect.width` so it tracks the input precisely. The dropdown renders only when both `filteredSuggestions.length > 0` **and** `dropdownRect` is non-null, preventing a stale/mispositioned flash on first render.
+
+  **Files changed**: `src/webview/components/block/CwdEditor.tsx` — added `createPortal` import from `react-dom`; added `dropdownRect` state; updated `triggerAutocomplete` to capture the rect; replaced the inline absolutely-positioned dropdown `<div>` with a `createPortal` call.
+
 - **Interactive CWD Path Editor (`CwdEditor.tsx`, `Block.tsx`, `App.tsx`, `FluxTermDocumentSession.ts`, `FluxTermService.ts`, `notebookStore.ts`, `MessageProtocol.ts`)**
 
   The CWD path displayed in each block's context bar is now fully interactive.

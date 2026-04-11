@@ -28,9 +28,9 @@ This format follows rigorous open-source repository management standards.
 - **webview**: Included complete ANSI terminal color scheme visualization in the `ColorBlock` component.
 - **webview**: Modernized `OutputBlock` and `OutputArea` to strictly map `ansi-to-react` HTML colors to VS Code's native theme CSS tokens (`--vscode-terminal-ansi*`).
 
-
 ### Bug Fixes
 
+- **webview**: Fixed CWD autocomplete dropdown being clipped/invisible due to `overflow: hidden` on `.block-card`. The dropdown in `CwdEditor` is now rendered via `createPortal` at `document.body` using `position: fixed` coordinates sourced from `getBoundingClientRect()` on the input element — mirroring the shell selector dropdown pattern in `Block.tsx`. Width is pinned to the input width; position updates every time suggestions are refreshed.
 - **webview** [Bug 1]: `handleBlockSubmit` was sending `orig.command` (frozen at first run) to the engine instead of `cmd` (the user's current textarea text) for done/error/killed block re-submissions. Edited commands now execute correctly.
 - **webview** [Bug 2]: Re-run moved blocks to the bottom of the document because `reRunBlockInPlace` bumped `block.seq` to the highest value and App.tsx sorts by `seq`. Fixed by separating the sequence guard counter (`blockSeq`/`lastRunSeq`) from the visual ordering field (`seq`). `block.seq` is no longer mutated on re-run.
 - **webview** [Bug 3]: `promoteIdleBlock` never injected the datetime separator or updated `createdAt`, so promoted idle blocks showed no timestamp header. Fixed to match `createBlock` behaviour.
