@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Ansi from "ansi-to-react";
 import { FluxTermBlock, OutputLine } from "../../../types/MessageProtocol";
+import { List, useDynamicRowHeight } from "react-window";
 
 // Shared date formatter
 function formatSeparatorDate(isoOrMs: string | number): string {
@@ -17,116 +18,131 @@ function formatSeparatorDate(isoOrMs: string | number): string {
   });
 }
 
-// Output line row
-interface LineProps {
-  line: OutputLine;
-  /** Text typed by the user, appended inline after the line (e.g. prompt answer). */
-  inlineInput?: string;
-  highlighted: boolean;
-}
+export type FlatItem =
+  | { type: "header"; separatorText: string }
+  | {
+      type: "line";
+      line: OutputLine;
+      inlineInput?: string;
+      highlighted: boolean;
+      isFirstGroupItem: boolean;
+      isLastGroupItem: boolean;
+    };
 
-const OutputLineRow: React.FC<LineProps> = ({
-  line,
-  inlineInput,
-  highlighted,
-}) => {
+// Flat List Virtualized Row
+const RowItem = ({
+  index,
+  style,
+  ariaAttributes,
+  flatItems,
+}: {
+  index: number;
+  style: React.CSSProperties;
+  ariaAttributes: Record<string, any>;
+  flatItems: FlatItem[];
+}): React.ReactElement | null => {
+  const item = flatItems[index];
+
+  if (item.type === "header") {
+    const label = item.separatorText
+      ? formatSeparatorDate(item.separatorText)
+      : null;
+    return (
+      <div style={style} {...ariaAttributes}>
+        {label && (
+          <span
+            style={{
+              display: "block",
+              color: "var(--vscode-descriptionForeground)",
+              fontSize: "12px",
+              userSelect: "none",
+              paddingTop: index === 0 ? "0" : "14px",
+              paddingBottom: "3px",
+              fontFamily:
+                "var(--vscode-editor-font-family, var(--vscode-terminal-font-family, monospace))",
+            }}
+          >
+            [{label}]
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  // Row line payload
   const color =
-    line.type === "stderr"
+    item.line.type === "stderr"
       ? "var(--vscode-testing-iconFailed, var(--vscode-terminal-ansiRed, #f14c4c))"
       : undefined;
 
   return (
-    <div
-      style={{
-        color,
-        backgroundColor: highlighted ? "rgba(255,197,0,0.15)" : "transparent",
-        borderRadius: highlighted ? "2px" : undefined,
-        display: "flex",
-        flexWrap: "wrap",
-      }}
-    >
-      <Ansi useClasses>{line.text}</Ansi>
-      {inlineInput !== undefined && (
-        <span
+    <div style={style} {...ariaAttributes}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          // Give inner wrapper full width and height
+          height: "100%",
+          width: "100%",
+        }}
+      >
+        <div
           style={{
-            color: "var(--vscode-button-background)",
-            marginLeft: "0.25ch",
-            opacity: 0.9,
+            borderLeft:
+              "2px solid var(--vscode-charts-blue, var(--vscode-button-background, #007fd4))",
+            color:
+              "var(--vscode-terminal-foreground, var(--vscode-editor-foreground))",
+            backgroundColor: item.highlighted
+              ? "rgba(255,197,0,0.15)"
+              : "transparent",
+            fontFamily:
+              "var(--vscode-terminal-font-family, var(--vscode-editor-font-family, monospace))",
+            fontSize: "12px",
+            lineHeight: "1.5",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-all",
+            paddingLeft: "10px",
+            paddingRight: "8px",
+            paddingTop: item.isFirstGroupItem ? "4px" : "1px",
+            paddingBottom: item.isLastGroupItem ? "4px" : "1px",
+            borderTopLeftRadius: item.isFirstGroupItem ? "2px" : "0px",
+            borderBottomLeftRadius: item.isLastGroupItem ? "2px" : "0px",
           }}
         >
-          {inlineInput}
-        </span>
-      )}
+          <div
+            style={{
+              color,
+              display: "flex",
+              flexWrap: "wrap",
+              minHeight: "18px",
+            }}
+          >
+            <Ansi useClasses>{item.line.text}</Ansi>
+            {item.inlineInput !== undefined && (
+              <span
+                style={{
+                  color: "var(--vscode-button-background)",
+                  marginLeft: "0.25ch",
+                  opacity: 0.9,
+                }}
+              >
+                {item.inlineInput}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-// Display row builder
-interface DisplayRow {
-  line: OutputLine;
-  inlineInput?: string;
-}
-
-function buildDisplayRows(lines: OutputLine[]): DisplayRow[] {
-  const rows: DisplayRow[] = [];
-  for (const line of lines) {
-    if (line.type === "stdin") {
-      if (rows.length > 0) {
-        const last = rows[rows.length - 1];
-        rows[rows.length - 1] = {
-          ...last,
-          inlineInput:
-            last.inlineInput !== undefined
-              ? last.inlineInput + " " + line.text
-              : line.text,
-        };
-      } else {
-        rows.push({ line: { type: "stdout", text: line.text } });
-      }
-    } else {
-      rows.push({ line });
-    }
-  }
-  return rows;
-}
-
-// Run session group (separator + its output lines)
-interface RunGroup {
-  /** ISO string / ms timestamp from the separator line */
-  separatorText: string;
-  rows: DisplayRow[];
-}
-
-/**
- * Splits flat display rows into groups, one per separator.
- * Lines before the first separator get their own group with an empty label
- * (shouldn't happen in practice since every real block starts with one).
- */
-function buildRunGroups(rows: DisplayRow[]): RunGroup[] {
-  const groups: RunGroup[] = [];
-  let current: RunGroup | null = null;
-
-  for (const row of rows) {
-    if (row.line.type === "separator") {
-      if (current) groups.push(current);
-      current = { separatorText: row.line.text, rows: [] };
-    } else {
-      if (!current) current = { separatorText: "", rows: [] };
-      current.rows.push(row);
-    }
-  }
-  if (current) groups.push(current);
-  return groups;
-}
-
-// OutputArea
 export const OutputArea: React.FC<{
   block: FluxTermBlock;
   searchQuery: string;
 }> = ({ block, searchQuery }) => {
   const { output, status, clearedAt, clearedAtTime } = block;
 
-  // Slice to only the visible lines (after the last clear)
+  // Visibility Filter
   const visibleLines = clearedAt !== null ? output.slice(clearedAt) : output;
 
   // Empty states
@@ -170,100 +186,103 @@ export const OutputArea: React.FC<{
     return null;
   }
 
-  const lowerQuery = searchQuery.toLowerCase();
-  const allRows = buildDisplayRows(visibleLines);
+  // Pre-calculate flattened structural lines mapping for virtualization
+  const flatItems = useMemo(() => {
+    const lowerQuery = searchQuery.toLowerCase();
+    const items: FlatItem[] = [];
 
-  // If the output was cleared and the first visible line is not a separator,
-  // prepend a synthetic separator using clearedAtTime so the group gets a label.
-  const rowsWithClearHeader: DisplayRow[] =
-    clearedAt !== null &&
-    clearedAtTime !== null &&
-    allRows[0]?.line.type !== "separator"
-      ? [
-          { line: { type: "separator", text: String(clearedAtTime) } },
-          ...allRows,
-        ]
-      : allRows;
+    // Synthesize the starting group if output was cleared partway
+    const startLines = [...visibleLines];
+    if (
+      clearedAt !== null &&
+      clearedAtTime !== null &&
+      startLines[0]?.type !== "separator"
+    ) {
+      startLines.unshift({ type: "separator", text: String(clearedAtTime) });
+    }
 
-  const groups = buildRunGroups(rowsWithClearHeader);
+    let currentGroupLineCount = 0;
+
+    for (let i = 0; i < startLines.length; i++) {
+      const line = startLines[i];
+
+      if (line.type === "separator") {
+        if (items.length > 0) {
+          const prev = items[items.length - 1];
+          if (prev.type === "line") {
+            prev.isLastGroupItem = true;
+          }
+        }
+        items.push({ type: "header", separatorText: line.text });
+        currentGroupLineCount = 0;
+      } else if (line.type === "stdin") {
+        if (items.length > 0 && items[items.length - 1].type === "line") {
+          const prevItem = items[items.length - 1] as Extract<
+            FlatItem,
+            { type: "line" }
+          >;
+          prevItem.inlineInput =
+            prevItem.inlineInput !== undefined
+              ? prevItem.inlineInput + " " + line.text
+              : line.text;
+
+          if (lowerQuery !== "") {
+            prevItem.highlighted =
+              prevItem.line.text.toLowerCase().includes(lowerQuery) ||
+              prevItem.inlineInput.toLowerCase().includes(lowerQuery);
+          }
+        } else {
+          items.push({
+            type: "line",
+            line: { type: "stdout", text: line.text },
+            highlighted:
+              lowerQuery !== "" && line.text.toLowerCase().includes(lowerQuery),
+            isFirstGroupItem: currentGroupLineCount === 0,
+            isLastGroupItem: false,
+          });
+          currentGroupLineCount++;
+        }
+      } else {
+        items.push({
+          type: "line",
+          line,
+          highlighted:
+            lowerQuery !== "" && line.text.toLowerCase().includes(lowerQuery),
+          isFirstGroupItem: currentGroupLineCount === 0,
+          isLastGroupItem: false,
+        });
+        currentGroupLineCount++;
+      }
+    }
+
+    if (items.length > 0) {
+      const last = items[items.length - 1];
+      if (last.type === "line") {
+        last.isLastGroupItem = true;
+      }
+    }
+
+    return items;
+  }, [visibleLines, searchQuery, clearedAt, clearedAtTime]);
+
+  const dynamicRowHeight = useDynamicRowHeight({ defaultRowHeight: 22 });
+
+  // Calculate a proportional height to prevent unnecessary empty space in a 300px block initially
+  // but cap it out at 300px for large runs. This replicates typical browser max-height behavior
+  const containerHeight = Math.min(flatItems.length * 22 + 40, 300);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0",
-        maxHeight: "300px",
-        overflowY: "auto",
-      }}
-    >
-      {groups.map((group, gi) => {
-        const label = group.separatorText
-          ? formatSeparatorDate(group.separatorText)
-          : null;
-
-        return (
-          <div key={gi}>
-            {/* Timestamp label */}
-            {label && (
-              <span
-                style={{
-                  display: "block",
-                  color: "var(--vscode-descriptionForeground)",
-                  fontSize: "12px",
-                  userSelect: "none",
-                  marginTop: gi === 0 ? "0" : "14px",
-                  marginBottom: "3px",
-                  fontFamily:
-                    "var(--vscode-editor-font-family, var(--vscode-terminal-font-family, monospace))",
-                }}
-              >
-                [{label}]
-              </span>
-            )}
-
-            {/* Output block */}
-            {group.rows.length > 0 && (
-              <div
-                style={{
-                  padding: "4px 8px 4px 10px",
-                  borderLeft:
-                    "2px solid var(--vscode-charts-blue, var(--vscode-button-background, #007fd4))",
-                  color:
-                    "var(--vscode-terminal-foreground, var(--vscode-editor-foreground))",
-                  fontFamily:
-                    "var(--vscode-terminal-font-family, var(--vscode-editor-font-family, monospace))",
-                  fontSize: "12px",
-                  lineHeight: "1.5",
-                  overflowX: "auto",
-                  whiteSpace: "pre",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                  borderTopLeftRadius: "2px",
-                  borderBottomLeftRadius: "2px",
-                }}
-              >
-                {group.rows.map((row, ri) => {
-                  const highlighted =
-                    lowerQuery !== "" &&
-                    (row.line.text.toLowerCase().includes(lowerQuery) ||
-                      (row.inlineInput?.toLowerCase().includes(lowerQuery) ??
-                        false));
-                  return (
-                    <OutputLineRow
-                      key={ri}
-                      line={row.line}
-                      inlineInput={row.inlineInput}
-                      highlighted={highlighted}
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
+    <div style={{ height: containerHeight }}>
+      {flatItems.length > 0 && (
+        <List<{ flatItems: FlatItem[] }>
+          rowCount={flatItems.length}
+          rowHeight={dynamicRowHeight}
+          rowProps={{ flatItems }}
+          rowComponent={RowItem}
+          className="fluxterm-output-list"
+          style={{ width: "100%", height: "100%", overflowX: "hidden" }}
+        />
+      )}
     </div>
   );
 };

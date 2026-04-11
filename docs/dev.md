@@ -18,6 +18,12 @@ The architecture is split between three main components:
 
 ### Recent Fixes & Updates
 
+- **Virtualized List Rendering for Execution Sequences (`OutputArea.tsx`)**
+  
+  **Problem**: The `OutputArea` constructed RunGroup blocks wrapped in dedicated parent `div` DOM elements mapping line objects inside them natively. Running high-volume terminal commands (like `npm install` or massive scripts) caused unrecoverable sluggishness as the browser mapped 1000+ nested DOM iterations. Additionally, TypeScript failed statically checking the ESM types imported via `react-window` globally.
+  
+  **Fix**: Virtualization and DOM flattening were introduced via `react-window` v2. `OutputArea` now pre-calculates an array of `flatItems` combining sequential output frames and historical timestamp headers into a 1-dimensional array. A continuous `List` element natively renders rows incrementally alongside memory (`useDynamicRowHeight`), resolving performance blocking entirely. Finally, `tsconfig.json` was updated, establishing `ESNext/Bundler` modes to silence TS restrictions while correctly mapping native compilation pipelines across modern Node.
+
 - **Execution Path Duality Fixed (`notebookStore.ts`, `App.tsx`)**
 
   **Problem**: There were two entry paths for non-ghost block execution: `promoteIdleBlock` for idle blocks and `reRunBlockInPlace` for completed blocks. This duality led to subtle bugs where execution data shapes drifted apart over time.
