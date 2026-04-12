@@ -1,6 +1,6 @@
 {
-  "name": "fluxterm",
-  "displayName": "FluxTerm",
+  "name": "flux-term",
+  "displayName": "Flux-Term",
   "description": "A notebook-style terminal where commands are structured, reusable, and composable — directly in VS Code.",
   "version": "1.1.0",
   "publisher": "FluxTerm",

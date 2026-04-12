@@ -8,7 +8,8 @@ _A notebook-style terminal where commands are structured, reusable, and composab
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.110.0-007ACC?logo=visualstudiocode)](https://code.visualstudio.com/)
-[![Version](https://img.shields.io/badge/version-1.0.0-success)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.1.0-success)](CHANGELOG.md)
+[![Marketplace](https://img.shields.io/visual-studio-marketplace/v/FluxTerm.flux-term?label=Marketplace&logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=FluxTerm.flux-term)
 
 ![FluxTerm Hero](https://raw.githubusercontent.com/0xdaksh-12/FluxTerm/main/assets/screenshots/01_empty_ui.png)
 
@@ -53,13 +54,15 @@ It's a hybrid of a terminal, a notebook (like Jupyter), and a command workflow s
 
 ## Installation
 
-### From the Marketplace _(coming soon)_
+### From the Marketplace
 
-Search `FluxTerm` in the VS Code Extensions panel.
+[![Install in VS Code](https://img.shields.io/badge/Install-VS%20Code%20Marketplace-007ACC?logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=FluxTerm.flux-term)
+
+Search **FluxTerm** in the VS Code Extensions panel, or click the badge above.
 
 ### From VSIX
 
-1. Download `fluxterm-1.0.0.vsix` from [Releases](https://github.com/0xdaksh-12/FluxTerm/releases)
+1. Download `fluxterm-1.1.0.vsix` from [Releases](https://github.com/0xdaksh-12/FluxTerm/releases)
 2. Open VS Code → `Extensions` → `...` menu → **Install from VSIX...**
 3. Select the downloaded file and reload
 
