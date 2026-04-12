@@ -145,19 +145,13 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
       }
       setIsValidating(true);
 
-      // Validate: list the parent directory and confirm the leaf exists.
+      // Validate: use statPath to confirm the exact path exists and is a directory.
       const normalized = trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
-      const lastSlash = normalized.lastIndexOf("/");
-      const parentDir = lastSlash <= 0 ? "/" : normalized.slice(0, lastSlash);
-      const leafName = normalized.slice(lastSlash + 1);
-
-      const parentEntries = await fluxTermService.listDir(parentDir);
-      // leafName is empty only for "/" or paths that end with "/"
-      const isValid = leafName === "" || parentEntries.includes(leafName);
+      const { exists, isDirectory } = await fluxTermService.statPath(normalized || "/");
 
       setIsValidating(false);
 
-      if (isValid) {
+      if (exists && isDirectory) {
         onCommit(trimmed);
         exitEditMode(false);
       } else {

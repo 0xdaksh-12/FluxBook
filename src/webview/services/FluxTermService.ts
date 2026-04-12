@@ -144,6 +144,32 @@ class FluxTermService {
     });
   }
 
+  /**
+   * Check if a path exists and is a directory.
+   */
+  public statPath(path: string): Promise<{ exists: boolean; isDirectory: boolean }> {
+    const requestId = Math.random().toString(36).slice(2);
+    return new Promise((resolve) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) { settled = true; unsub(); resolve({ exists: false, isDirectory: false }); }
+      }, 3000);
+
+      const unsub = this.subscribe((msg: any) => {
+        if (msg.type === "pathStat" && msg.requestId === requestId) {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            unsub();
+            resolve({ exists: msg.exists, isDirectory: msg.isDirectory });
+          }
+        }
+      });
+
+      this.vscode.postMessage({ type: "statPath", requestId, path });
+    });
+  }
+
   /** Show a VS Code notification (info / warning / error). */
   public notify(level: "info" | "warning" | "error", message: string): void {
     this.vscode.postMessage({ type: "notify", level, message });

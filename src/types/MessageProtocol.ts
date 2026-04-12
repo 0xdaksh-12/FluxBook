@@ -167,7 +167,9 @@ export type WebviewMessage =
    */
   | { type: "listDir"; requestId: string; path: string }
   /** Show a VS Code notification (info / warning / error). */
-  | { type: "notify"; level: "info" | "warning" | "error"; message: string };
+  | { type: "notify"; level: "info" | "warning" | "error"; message: string }
+  /** Request the file system stat for a given path to validate it. */
+  | { type: "statPath"; requestId: string; path: string };
 
 // Extension → Webview Messages
 export type ExtMessage =
@@ -195,4 +197,8 @@ export type ExtMessage =
    * `entries` contains immediate child directory names (not full paths).
    * `error` is set when the path doesn't exist or isn't a directory.
    */
-  | { type: "dirList"; requestId: string; entries: string[]; error?: string };
+  | { type: "dirList"; requestId: string; entries: string[]; error?: string }
+  /**
+   * Response to a `statPath` request.
+   */
+  | { type: "pathStat"; requestId: string; exists: boolean; isDirectory: boolean; error?: string };

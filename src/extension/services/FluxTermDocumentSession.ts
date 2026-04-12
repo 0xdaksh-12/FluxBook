@@ -186,6 +186,31 @@ export class FluxTermDocumentSession {
             break;
           }
 
+          // Path validation
+          case "statPath": {
+            const { requestId, path: statPath } = message;
+            this.enqueue(async () => {
+              try {
+                const stats = await fs.stat(statPath);
+                this.post({
+                  type: "pathStat",
+                  requestId,
+                  exists: true,
+                  isDirectory: stats.isDirectory(),
+                });
+              } catch (e: any) {
+                this.post({
+                  type: "pathStat",
+                  requestId,
+                  exists: false,
+                  isDirectory: false,
+                  error: e.message || String(e),
+                });
+              }
+            });
+            break;
+          }
+
           // VS Code notification
           case "notify": {
             const msg = message.message;

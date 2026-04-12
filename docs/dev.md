@@ -18,6 +18,12 @@ The architecture is split between three main components:
 
 ### Recent Fixes & Updates
 
+- **CwdEditor Stat-based Validation (`CwdEditor.tsx`, `FluxTermService.ts`, `FluxTermDocumentSession.ts`, `MessageProtocol.ts`)**
+  
+  **What changed**: The inline CwdEditor path validation on pressing Enter now performs a direct `statPath` existence check against the requested path, instead of parsing a potentially huge sibling directory string array.
+  
+  **How**: `MessageProtocol.ts` gained the `statPath` explicit WebviewMessage request and paired `pathStat` associative response type. `FluxTermDocumentSession` responds safely via `fs.stat(path)` evaluations and emits `{exists: boolean, isDirectory: boolean}` variables deterministically, entirely detaching user permissions listing restraints from explicit exact-path availability tracking.
+
 - **Virtualized List Rendering for Execution Sequences (`OutputArea.tsx`)**
   
   **Problem**: The `OutputArea` constructed RunGroup blocks wrapped in dedicated parent `div` DOM elements mapping line objects inside them natively. Running high-volume terminal commands (like `npm install` or massive scripts) caused unrecoverable sluggishness as the browser mapped 1000+ nested DOM iterations. Additionally, TypeScript failed statically checking the ESM types imported via `react-window` globally.
