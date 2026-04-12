@@ -30,6 +30,11 @@ node_modules/**
 # Test artifacts
 .vscode-test/**
 storybook-static/**
+dist/extension/**
+dist/webview/**
+dist/types/**
+dist/utils/**
+dist/tests/**
 
 # Docs & misc
 docs/**
