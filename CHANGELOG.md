@@ -32,6 +32,8 @@ This format follows rigorous open-source repository management standards.
 
 ### Bug Fixes
 
+- **webview**: Ghost block `Add` button now correctly solidifies typed commands into an idle block before resetting the ghost block underneath, preventing inversion errors.
+- **webview**: Scrolling while interacting with the CWD autocompletion dropdown no longer disconnects the dropdown arbitrarily.
 - **webview**: Fixed CWD autocomplete dropdown being clipped/invisible due to `overflow: hidden` on `.block-card`. The dropdown in `CwdEditor` is now rendered via `createPortal` at `document.body` using `position: fixed` coordinates sourced from `getBoundingClientRect()` on the input element — mirroring the shell selector dropdown pattern in `Block.tsx`. Width is pinned to the input width; position updates every time suggestions are refreshed.
 - **webview**: `OutputArea` refactored to render run-session groups — each `separator` line becomes a compact italic `[timestamp]` label above a blue-left-bordered, scrollable output block (matching the workspace mock pattern). The old full-width `SeparatorRow` divider is replaced. Output from multiple re-runs is visually grouped under individual session headers. The outer wrapper in `Block.tsx` no longer draws the border (moved per-group into `OutputArea`).
 - **webview** [Bug 1]: `handleBlockSubmit` was sending `orig.command` (frozen at first run) to the engine instead of `cmd` (the user's current textarea text) for done/error/killed block re-submissions. Edited commands now execute correctly.

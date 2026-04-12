@@ -87,6 +87,7 @@ export interface UseNotebookReturn {
     cwd: string,
     branch: string | null,
     documentId?: string,
+    command?: string,
   ) => string;
 
   /**
@@ -408,6 +409,7 @@ export function useNotebook(
       cwd: string,
       branch: string | null,
       documentId?: string,
+      command: string = "",
     ): string => {
       const id = generateId();
       setState((prev) =>
@@ -425,7 +427,7 @@ export function useNotebook(
           draft.blocks.splice(insertAt, 0, {
             id,
             seq,
-            command: "",
+            command,
             shell,
             cwd,
             branch,

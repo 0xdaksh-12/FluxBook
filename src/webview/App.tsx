@@ -421,7 +421,7 @@ export default function App() {
                   handleReRun(block.id, cmd, cwd, shell)
                 }
                 onClearOutput={() => handleClearOutput(block.id)}
-                onAddAfter={() => handleAddAfter(block.id, doc.id)}
+                onAddAfter={(cmd, cwd, shell) => handleAddAfter(block.id, doc.id)}
                 onKill={() => fluxTermService.killBlock(block.id)}
                 onCwdChange={(newCwd) => {
                   // For idle blocks, persist the CWD into the store so it survives re-renders.
@@ -448,9 +448,24 @@ export default function App() {
               onShellChange={() => {
                 /* handled locally in Block via localShell */
               }}
-              onAddAfter={() => {
-                const last = docBlocks[docBlocks.length - 1];
-                if (last) handleAddAfter(last.id, doc.id);
+              onAddAfter={(cmd, cwd, shell) => {
+                if (cmd.trim() && shell) {
+                  const effectiveCwd = ghostCwds[doc.id] ?? lastDocCwd;
+                  spliceBlockAfter(
+                    "append",
+                    shell,
+                    effectiveCwd,
+                    baseContext.branch ?? null,
+                    doc.id,
+                    cmd
+                  );
+                  setGhostCommands((prev) => ({ ...prev, [doc.id]: "" }));
+                  setGhostCwds((prev) => ({ ...prev, [doc.id]: "" }));
+                  fluxTermService.markDirty();
+                } else {
+                  const last = docBlocks[docBlocks.length - 1];
+                  if (last) handleAddAfter(last.id, doc.id);
+                }
               }}
               onCwdChange={(newCwd) =>
                 setGhostCwds((prev) => ({ ...prev, [doc.id]: newCwd }))
@@ -482,7 +497,28 @@ export default function App() {
           onShellChange={() => {
             /* handled locally in Block via localShell */
           }}
-          onAddAfter={() => {}}
+          onAddAfter={(cmd, cwd, shell) => {
+            if (cmd.trim() && shell) {
+              const newDocId = generateId();
+              setDocuments((prev) => {
+                const updated = [...prev, { id: newDocId, name: DEFAULT_DOC_NAME }];
+                persistDocuments(updated);
+                return updated;
+              });
+              const effectiveCwd = ghostDocCwd || baseContext.cwd;
+              spliceBlockAfter(
+                "append",
+                shell,
+                effectiveCwd,
+                baseContext.branch ?? null,
+                newDocId,
+                cmd
+              );
+              setGhostDocCommand("");
+              setGhostDocCwd("");
+              fluxTermService.markDirty();
+            }
+          }}
           onCwdChange={(newCwd) => setGhostDocCwd(newCwd)}
         />
       </BlockDocument>

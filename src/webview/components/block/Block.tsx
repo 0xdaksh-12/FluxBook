@@ -53,7 +53,7 @@ export interface BlockProps {
   onDelete?: () => void;
   onReRun?: (cmd: string, cwd: string, shell: ResolvedShell | null) => void;
   onClearOutput?: () => void;
-  onAddAfter?: () => void;
+  onAddAfter?: (cmd: string, cwd: string, shell: ResolvedShell | null) => void;
   onKill?: () => void;
   /**
    * Called when CwdEditor commits a new path for this block.
@@ -361,7 +361,7 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
         >
           {/* Add */}
           <Tooltip content="Add block below">
-            <button className="block-tb-btn" onClick={onAddAfter}>
+            <button className="block-tb-btn" onClick={() => onAddAfter?.(commandValue, localCwd, localShell)}>
               <span
                 className="codicon codicon-add"
                 style={{ fontSize: "14px" }}
