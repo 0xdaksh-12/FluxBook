@@ -7,6 +7,7 @@ This format follows rigorous open-source repository management standards.
 
 ### Features
 
+- **webview**: Removed `autoFocus` from the `Block` textarea. This mitigates unexpected focus jumps when blocks are added/removed or when navigating between documents, deferring completely to manual focus management.
 - **webview**: CwdEditor validation now uses a stat-based IPC call (`statPath`) rather than listDir, improving matching robustness and eliminating directory listing permission issues.
 - **webview**: Virtualized `OutputArea` using `react-window` v2 to easily support 1000+ line execution rendering, decoupling heavy log history from sluggish DOM limits. Output nodes are logically flattened into native list vectors with border mapping injected inline.
 - **webview**: Interactive CWD path editor in each block's context bar. Double-clicking the path switches to an inline input with directory autocomplete (debounced 200 ms `listDir` round-trips to the extension). Tab/↑↓ navigate the dropdown; Enter commits and validates the path. Invalid paths trigger a VS Code warning notification instead of silently accepting garbage. Ctrl+click (Cmd+click on macOS) copies the path to the clipboard and briefly flashes a "Copied!" tooltip. Running blocks show the path read-only. The edited CWD is threaded through `onSubmit` (`cwdOverride` parameter) so ghost blocks, idle blocks, and completed block re-runs all execute in the overridden directory.

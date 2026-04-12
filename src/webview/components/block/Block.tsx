@@ -626,7 +626,6 @@ export const Block = forwardRef<HTMLDivElement, BlockProps>(
             </span>
             <textarea
               ref={textareaRef}
-              autoFocus={isGhost || status === "idle"}
               readOnly={isRunning}
               rows={1}
               value={commandValue}

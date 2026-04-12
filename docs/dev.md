@@ -18,16 +18,22 @@ The architecture is split between three main components:
 
 ### Recent Fixes & Updates
 
+- **Focus Management Streamlining (`Block.tsx`)**
+
+  **What changed**: Removed the `autoFocus={isGhost || status === "idle"}` prop from the `Block` textarea.
+
+  **Why**: The manual focus management behavior tracking document-wide `mousedown` interactions was semantically fighting with native React `autoFocus`. This resolves unexpected page jumping and cursor hijacking when new blocks are inserted or documents are deleted.
+
 - **CwdEditor Stat-based Validation (`CwdEditor.tsx`, `FluxTermService.ts`, `FluxTermDocumentSession.ts`, `MessageProtocol.ts`)**
-  
+
   **What changed**: The inline CwdEditor path validation on pressing Enter now performs a direct `statPath` existence check against the requested path, instead of parsing a potentially huge sibling directory string array.
-  
+
   **How**: `MessageProtocol.ts` gained the `statPath` explicit WebviewMessage request and paired `pathStat` associative response type. `FluxTermDocumentSession` responds safely via `fs.stat(path)` evaluations and emits `{exists: boolean, isDirectory: boolean}` variables deterministically, entirely detaching user permissions listing restraints from explicit exact-path availability tracking.
 
 - **Virtualized List Rendering for Execution Sequences (`OutputArea.tsx`)**
-  
+
   **Problem**: The `OutputArea` constructed RunGroup blocks wrapped in dedicated parent `div` DOM elements mapping line objects inside them natively. Running high-volume terminal commands (like `npm install` or massive scripts) caused unrecoverable sluggishness as the browser mapped 1000+ nested DOM iterations. Additionally, TypeScript failed statically checking the ESM types imported via `react-window` globally.
-  
+
   **Fix**: Virtualization and DOM flattening were introduced via `react-window` v2. `OutputArea` now pre-calculates an array of `flatItems` combining sequential output frames and historical timestamp headers into a 1-dimensional array. A continuous `List` element natively renders rows incrementally alongside memory (`useDynamicRowHeight`), resolving performance blocking entirely. Finally, `tsconfig.json` was updated, establishing `ESNext/Bundler` modes to silence TS restrictions while correctly mapping native compilation pipelines across modern Node.
 
 - **Execution Path Duality Fixed (`notebookStore.ts`, `App.tsx`)**
