@@ -19,9 +19,15 @@ export interface GhostDocumentGroupProps {
     branch: string | null,
     documentId?: string,
     command?: string,
-    type?: "terminal" | "markdown"
+    type?: "terminal" | "markdown",
   ) => string;
-  createBlock: (cmd: string, shell: ResolvedShell, cwd: string, branch: string | null, documentId?: string) => string;
+  createBlock: (
+    cmd: string,
+    shell: ResolvedShell,
+    cwd: string,
+    branch: string | null,
+    documentId?: string,
+  ) => string;
 }
 
 export function GhostDocumentGroup({
@@ -35,7 +41,11 @@ export function GhostDocumentGroup({
   const [ghostDocCommand, setGhostDocCommand] = useState("");
   const [ghostDocCwd, setGhostDocCwd] = useState("");
 
-  const handleGhostDocSubmit = (cmd: string, shell: ResolvedShell | null, cwdOverride?: string) => {
+  const handleGhostDocSubmit = (
+    cmd: string,
+    shell: ResolvedShell | null,
+    cwdOverride?: string,
+  ) => {
     if (!shell || !cmd.trim()) return;
     const newDocId = generateId();
     const newDoc: BlockDocumentMeta = {
@@ -83,27 +93,27 @@ export function GhostDocumentGroup({
         availableShells={shells}
         onShellChange={() => {}}
         onAddAfter={(cmd, cwd, shell, type) => {
-          if (cmd.trim() && shell) {
-            const newDocId = generateId();
-            setDocuments((prev) => {
-              const updated = [...prev, { id: newDocId, name: DEFAULT_DOC_NAME }];
-              persistDocuments(updated);
-              return updated;
-            });
-            const effectiveCwd = ghostDocCwd || baseContext.cwd;
-            spliceBlockAfter(
-              "append",
-              shell,
-              effectiveCwd,
-              baseContext.branch ?? null,
-              newDocId,
-              cmd,
-              type
-            );
-            setGhostDocCommand("");
-            setGhostDocCwd("");
-            fluxTermService.markDirty();
-          }
+          const effectiveShell = shell ?? baseContext.shell;
+          if (!effectiveShell) return;
+          const newDocId = generateId();
+          setDocuments((prev) => {
+            const updated = [...prev, { id: newDocId, name: DEFAULT_DOC_NAME }];
+            persistDocuments(updated);
+            return updated;
+          });
+          const effectiveCwd = ghostDocCwd || baseContext.cwd;
+          spliceBlockAfter(
+            "append",
+            effectiveShell,
+            effectiveCwd,
+            baseContext.branch ?? null,
+            newDocId,
+            cmd.trim() ? cmd : "",
+            type,
+          );
+          setGhostDocCommand("");
+          setGhostDocCwd("");
+          fluxTermService.markDirty();
         }}
         onCwdChange={setGhostDocCwd}
       />

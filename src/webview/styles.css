@@ -78,52 +78,68 @@
   /* ANSI Colors to VS Code Terminal Colors Mapping */
   .ansi-black-fg {
     color: var(--vscode-terminal-ansiBlack);
+    opacity: 0.75;
   }
   .ansi-red-fg {
     color: var(--vscode-terminal-ansiRed);
+    opacity: 0.75;
   }
   .ansi-green-fg {
     color: var(--vscode-terminal-ansiGreen);
+    opacity: 0.75;
   }
   .ansi-yellow-fg {
     color: var(--vscode-terminal-ansiYellow);
+    opacity: 0.75;
   }
   .ansi-blue-fg {
     color: var(--vscode-terminal-ansiBlue);
+    opacity: 0.75;
   }
   .ansi-magenta-fg {
     color: var(--vscode-terminal-ansiMagenta);
+    opacity: 0.75;
   }
   .ansi-cyan-fg {
     color: var(--vscode-terminal-ansiCyan);
+    opacity: 0.75;
   }
   .ansi-white-fg {
     color: var(--vscode-terminal-ansiWhite);
+    opacity: 0.75;
   }
 
   .ansi-bright-black-fg {
     color: var(--vscode-terminal-ansiBrightBlack);
+    opacity: 0.75;
   }
   .ansi-bright-red-fg {
     color: var(--vscode-terminal-ansiBrightRed);
+    opacity: 0.75;
   }
   .ansi-bright-green-fg {
     color: var(--vscode-terminal-ansiBrightGreen);
+    opacity: 0.75;
   }
   .ansi-bright-yellow-fg {
     color: var(--vscode-terminal-ansiBrightYellow);
+    opacity: 0.75;
   }
   .ansi-bright-blue-fg {
     color: var(--vscode-terminal-ansiBrightBlue);
+    opacity: 0.75;
   }
   .ansi-bright-magenta-fg {
     color: var(--vscode-terminal-ansiBrightMagenta);
+    opacity: 0.75;
   }
   .ansi-bright-cyan-fg {
     color: var(--vscode-terminal-ansiBrightCyan);
+    opacity: 0.75;
   }
   .ansi-bright-white-fg {
     color: var(--vscode-terminal-ansiBrightWhite);
+    opacity: 0.75;
   }
 
   .ansi-black-bg {

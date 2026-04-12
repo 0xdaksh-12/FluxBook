@@ -6,20 +6,14 @@ This format follows rigorous open-source repository management standards.
 ## [Unreleased]
 
 ### Bug Fixes
-
-- **extension**: `activate()` now guards the Getting Started walkthrough auto-open behind `ExtensionMode.Production`. Previously the `setTimeout` fired in `vscode-test` (which runs in `Test` mode) causing `workbench.action.openWalkthrough` to hang the extension host, making all E2E tests time out.
 - **extension (tests)**: Added `tsconfig.test.json` targeting `"module": "CommonJS"` + `"moduleResolution": "Node"` for the E2E test compilation path. The root `tsconfig.json` uses `ESNext/Bundler` which emits ES `import` statements; Mocha inside the VS Code extension host requires CommonJS `require()`. The `compile-tests` and `watch-tests` scripts now point to the new config.
 - **webview**: Removed static `+ 40px` height buffer from `OutputArea` causing excessive blank space at the bottom of short execution blocks. The `List` layout now tightly conforms to estimated internal content height.
 - **engine**: Fixed a pervasive synchronization bug where rapidly toggling or reloading the webview mid-execution resulted in permanent "running" (spinner) block states. The Session manager now queries `ExecutionEngine.getActiveBlockIds()` and broadcasts synthetic `blockComplete(killed)` messages before tearing down the terminal process tree.
 - **webview**: Fixed "ghost block command bleed" in `DocumentGroup.tsx` where executing the ghost block copied its command string to the newly appended ghost surface instead of initializing empty.
-- **webview** [Bug 14]: Fixed a React 18 concurrent-mode race in `notebookStore.runBlock`. The old implementation set a `found` closure variable inside a `setState` functional updater. When React deferred the updater batch, `found` was still `false` when `runBlock` returned, causing it to return `null` — so `handleBlockSubmit` skipped `fluxTermService.execute()` entirely. The block state later flipped to `"running"` (when the deferred updater finally ran) with no corresponding host process, making kill a no-op. Fixed by pre-checking eligibility synchronously from a `stateRef` mirror before calling `setState`, removing any reliance on mutation inside a deferred updater.
+- **webview** [Bug 14]: Fixed a React 18 concurrent-mode race in `notebookStore.runBlock`. The old implementation set a `found` closure variable inside a `setState` functional updater. When React deferred the updater batch, `found` was still `false` when `runBlock` returned, causing it to return `null` — so `handleBlockSubmit` skipped `fluxTermService.execute()` entirely. The block state later flipped to `"running"` (when the deferred updater finally ran) with no corresponding host process, making kill a no-op. Fixed by pre-checking eligibility synchronously from a `stateRef` mirror before calling `setState`, removing any reliance on mutation inside a deferred updater. 
+- **webview**: Fixed `DocumentGroup` and `GhostDocumentGroup` silently ignoring "Add Markdown Block" when the document contained no real blocks (only the ghost). The `onAddAfter` handler was gated on `cmd.trim() \&\& shell` — an empty ghost input never passed this check. Fixed by falling through to a direct `spliceBlockAfter("append", ...)` call using `baseContext.shell` as a fallback, creating the document group and markdown block regardless of ghost input state.
 
 ## [1.1.0] - 2026-04-12
-
-### Features
-
-- **extension**: Added VS Code native `walkthroughs` contribute point (`fluxterm.gettingStarted`) with 5 guided steps: Open a FluxTerm File, Run Your First Command, Change Working Directory, Re-run or Edit Any Block, Add Markdown Documentation. Each step includes a custom illustration and `completionEvents` for step tracking.
-- **extension**: Auto-opens the Getting Started walkthrough on first install using `context.globalState` to gate the activation once per user profile. A 1.5 s delay ensures VS Code is fully ready before the panel opens.
 
 ### Bug Fixes
 

@@ -1,18 +1,44 @@
+# Development tooling
 .vscode/**
 .vscode-test/**
-node_modules/**
-src/**
-.gitignore
-.yarnrc
-esbuild.js
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/eslint.config.mjs
-**/*.map
-**/*.ts
-**/.vscode-test.*
-tailwind.config.js
-.agent
-.env
+.vscode-test.mjs
+.agent/**
 .storybook/**
+.git/**
+.gitignore
+.npmrc
+.env
+
+# Source (compiled to dist/)
+src/**
+
+# Build tooling & config
+esbuild.js
+eslint.config.mjs
+tailwind.config.js
+tsconfig.json
+tsconfig.storybook.json
+tsconfig.test.json
+vitest.config.mts
+vitest.config.webview.mts
+pnpm-lock.yaml
+pnpm-workspace.yaml
+
+# Dependencies
+node_modules/**
+
+# Test artifacts
+.vscode-test/**
 storybook-static/**
+
+# Docs & misc
+docs/**
+dev_color_code.md
+vsc-extension-quickstart.md
+
+# Source maps
+**/*.map
+
+# Media not needed at runtime
+assets/video/**
+assets/screenshots/**

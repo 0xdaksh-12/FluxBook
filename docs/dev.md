@@ -218,34 +218,6 @@ return blockId; // always succeeds — pre-check passed
 
 ---
 
-### VS Code Native Walkthrough (`package.json`, `src/extension.ts`)
-
-**What was added**: A `walkthroughs` contribute point with id `fluxterm.gettingStarted` and 5 linear steps:
-
-| Step id    | Title                        |
-| ---------- | ---------------------------- |
-| `openFile` | Open a FluxTerm File         |
-| `runFirst` | Run Your First Command       |
-| `editCwd`  | Change the Working Directory |
-| `rerun`    | Re-run or Edit Any Block     |
-| `markdown` | Add Markdown Documentation   |
-
-Each step has:
-
-- A `description` with embedded command links (e.g. `[Create a New FluxTerm File](command:fluxterm.newFile)`)
-- A `media.image` pointing to `assets/walkthrough/stepN_*.png` (custom illustrations)
-- A `completionEvents` array for VS Code to auto-check the step when the user performs the action
-
-**Auto-open on first install** (`src/extension.ts`):
-
-- `context.globalState.get("fluxterm.walkthroughShown", false)` gates the auto-open.
-- On first activation, the walkthrough panel is opened after a 1.5 s delay via `workbench.action.openWalkthrough`.
-- The key is set to `true` immediately so subsequent reloads don't re-open the panel.
-
-**Walkthrough illustrations** (`assets/walkthrough/`):
-
-- 5 PNG files (step1–step5) generated as AI illustrations matching VS Code dark theme and FluxTerm teal accent palette.
-
 ### Test Suite Fixes
 
 Three categories of webview test failures were resolved:

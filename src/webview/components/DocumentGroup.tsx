@@ -160,6 +160,7 @@ export function DocumentGroup({
         onShellChange={() => {}}
         onAddAfter={(cmd, cwd, shell, type) => {
           if (cmd.trim() && shell) {
+            // Ghost block has a command typed — splice it in along with the new block
             const effectiveCwd = ghostCwd || lastDocCwd;
             spliceBlockAfter(
               "append",
@@ -175,7 +176,24 @@ export function DocumentGroup({
             fluxTermService.markDirty();
           } else {
             const last = docBlocks[docBlocks.length - 1];
-            if (last) actions.handleAddAfter(last.id, doc.id, type);
+            if (last) {
+              // Delegate to the last real block's add-after handler
+              actions.handleAddAfter(last.id, doc.id, type);
+            } else {
+              // Document has no real blocks yet (only ghost) — splice directly
+              const effectiveShell = shell ?? baseContext.shell;
+              if (!effectiveShell) return;
+              spliceBlockAfter(
+                "append",
+                effectiveShell,
+                ghostCwd || lastDocCwd,
+                baseContext.branch ?? null,
+                doc.id,
+                "",
+                type,
+              );
+              fluxTermService.markDirty();
+            }
           }
         }}
         onCwdChange={setGhostCwd}
