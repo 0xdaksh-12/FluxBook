@@ -168,31 +168,82 @@ This structure ensures that any agent or developer working on FluxTerm has immed
 
 ---
 
-## Publication Polish — 2026-04-12
+## Bug 14 — `runBlock` React 18 Concurrent-Mode Race (`notebookStore.ts`)
+
+### Problem
+
+When running the same block multiple times in quick succession, the block would flip to `"running"` state in the UI but no execute request would be sent to the extension host. Clicking Kill would have no effect because the engine had no live process for that block.
+
+### Root Cause
+
+`notebookStore.runBlock` used a **closure variable `found`** mutated _inside_ a `setState` functional updater:
+
+```ts
+let found = false;
+setState((prev) => produce(prev, (draft) => {
+  const block = draft.blocks.find(...);
+  if (!block || block.status === "running") return;
+  found = true;          // ← set inside the updater
+  block.status = "running";
+}));
+return found ? blockId : null;   // ← relied on found being set synchronously
+```
+
+In React 18 **concurrent/automatic batching**, `setState` updaters can be deferred. When React defers the updater to a later microtask/flush, `found` is still `false` when `runBlock` returns — so it returns `null`. `handleBlockSubmit` in `useAppActions` sees `null` and **returns early without calling `fluxTermService.execute()`**. The deferred state updater later runs and flips the block to `"running"`, but there is no corresponding host process.
+
+### Fix (`src/webview/store/notebookStore.ts`)
+
+1. Added a `stateRef = useRef(state)` that is updated as `stateRef.current = state` on every render — this always reflects the latest committed state synchronously.
+2. `runBlock` now **pre-checks eligibility synchronously** by reading `stateRef.current.blocks` _before_ calling `setState`. If the block does not exist or is already running, it returns `null` immediately.
+3. The `setState(produce(...))` call is only reached when the pre-check passes, so it returns `blockId` unconditionally.
+4. A **double-guard** inside the updater is kept for theoretical concurrent races where two callers might both pass the pre-check in the same JS tick.
+
+```ts
+const currentBlock = stateRef.current.blocks.find((b) => b.id === blockId);
+if (!currentBlock || currentBlock.status === "running") {
+  return null; // fast path, no setState
+}
+setState((prev) =>
+  produce(prev, (draft) => {
+    const block = draft.blocks.find((b) => b.id === blockId);
+    if (!block || block.status === "running") return; // double-guard
+    block.status = "running";
+    // ...
+  }),
+);
+return blockId; // always succeeds — pre-check passed
+```
+
+**Files changed**: `src/webview/store/notebookStore.ts` — added `useRef` import; added `stateRef` mirror; rewrote `runBlock` guard logic.
+
+---
 
 ### VS Code Native Walkthrough (`package.json`, `src/extension.ts`)
 
 **What was added**: A `walkthroughs` contribute point with id `fluxterm.gettingStarted` and 5 linear steps:
 
-| Step id | Title |
-|---------|-------|
-| `openFile` | Open a FluxTerm File |
-| `runFirst` | Run Your First Command |
-| `editCwd` | Change the Working Directory |
-| `rerun` | Re-run or Edit Any Block |
-| `markdown` | Add Markdown Documentation |
+| Step id    | Title                        |
+| ---------- | ---------------------------- |
+| `openFile` | Open a FluxTerm File         |
+| `runFirst` | Run Your First Command       |
+| `editCwd`  | Change the Working Directory |
+| `rerun`    | Re-run or Edit Any Block     |
+| `markdown` | Add Markdown Documentation   |
 
 Each step has:
+
 - A `description` with embedded command links (e.g. `[Create a New FluxTerm File](command:fluxterm.newFile)`)
 - A `media.image` pointing to `assets/walkthrough/stepN_*.png` (custom illustrations)
 - A `completionEvents` array for VS Code to auto-check the step when the user performs the action
 
 **Auto-open on first install** (`src/extension.ts`):
+
 - `context.globalState.get("fluxterm.walkthroughShown", false)` gates the auto-open.
 - On first activation, the walkthrough panel is opened after a 1.5 s delay via `workbench.action.openWalkthrough`.
 - The key is set to `true` immediately so subsequent reloads don't re-open the panel.
 
 **Walkthrough illustrations** (`assets/walkthrough/`):
+
 - 5 PNG files (step1–step5) generated as AI illustrations matching VS Code dark theme and FluxTerm teal accent palette.
 
 ### Test Suite Fixes
@@ -211,6 +262,7 @@ Three categories of webview test failures were resolved:
 ### README Rewrite
 
 Full replacement of the previous thin README with a structured showcase document:
+
 - Badge row (license, VS Code version, release version)
 - One-line pitch and problem/solution framing
 - 6 core feature sections with screenshot placeholders

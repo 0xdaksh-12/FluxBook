@@ -8,7 +8,7 @@
 //   - Block completion updates runtimeContext using a sequence guard to prevent
 //     an earlier block that finishes late from overwriting newer context data.
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { produce } from "immer";
 import {
   FluxTermBlock,
@@ -120,6 +120,17 @@ export function useNotebook(
     runtimeContext: initialContext,
     blockSeq: initialBlocks.reduce((max, b) => Math.max(max, b.seq), 0),
   }));
+
+  /**
+   * Always-current mirror of `state`.
+   * React 18 concurrent mode may defer `setState` functional updaters, so we
+   * cannot rely on a closure variable mutated inside `produce()` to communicate
+   * success back to the caller. Reading `stateRef.current` synchronously in
+   * the same call frame is safe because React updates `state` (and we sync this
+   * ref) only between renders, never mid-synchronous-call.
+   */
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Context management
   /**
@@ -330,15 +341,26 @@ export function useNotebook(
       cwd: string,
       branch: string | null,
     ): string | null => {
-      let found = false;
+      // Pre-check eligibility synchronously from the always-current stateRef.
+      // This avoids the React 18 concurrent-mode race where `setState`'s
+      // functional updater may be deferred, causing a closure variable mutated
+      // inside `produce()` to still read as `false` when this function returns.
+      const currentBlock = stateRef.current.blocks.find(
+        (b) => b.id === blockId,
+      );
+      if (!currentBlock || currentBlock.status === "running") {
+        return null;
+      }
+
       setState((prev) =>
         produce(prev, (draft) => {
           const block = draft.blocks.find((b) => b.id === blockId);
-          // Guard: never run a block that is already running
+          // Double-guard inside the updater: another concurrent update may have
+          // already flipped the block to "running" between our pre-check and
+          // when React applies this updater.
           if (!block || block.status === "running") {
             return;
           }
-          found = true;
           const isIdle = block.status === "idle";
 
           block.command = command;
@@ -346,7 +368,7 @@ export function useNotebook(
           block.cwd = cwd;
           block.branch = branch;
           block.status = "running";
-          
+
           block.exitCode = null;
           block.finalCwd = null;
           block.finalBranch = null;
@@ -372,7 +394,7 @@ export function useNotebook(
           // clearedAt / clearedAtTime are intentionally preserved.
         }),
       );
-      return found ? blockId : null;
+      return blockId;
     },
     [],
   );
@@ -417,7 +439,7 @@ export function useNotebook(
       branch: string | null,
       documentId?: string,
       command: string = "",
-      type: "terminal" | "markdown" = "terminal"
+      type: "terminal" | "markdown" = "terminal",
     ): string => {
       const id = generateId();
       setState((prev) =>
@@ -457,8 +479,6 @@ export function useNotebook(
     [],
   );
 
-
-
   /**
    * Update the `cwd` on an idle block (e.g. user edits the path before submitting).
    * No-op if the block is not idle — cwd on running/done blocks reflects the
@@ -479,16 +499,19 @@ export function useNotebook(
    * Directly mutate a block's command text.
    * Useful for text-only elements (markdown) or tracking silent state.
    */
-  const updateBlockCommand = useCallback((blockId: string, command: string): void => {
-    setState((prev) =>
-      produce(prev, (draft) => {
-        const block = draft.blocks.find((b) => b.id === blockId);
-        if (block) {
-          block.command = command;
-        }
-      })
-    );
-  }, []);
+  const updateBlockCommand = useCallback(
+    (blockId: string, command: string): void => {
+      setState((prev) =>
+        produce(prev, (draft) => {
+          const block = draft.blocks.find((b) => b.id === blockId);
+          if (block) {
+            block.command = command;
+          }
+        }),
+      );
+    },
+    [],
+  );
 
   return {
     blocks: state.blocks,

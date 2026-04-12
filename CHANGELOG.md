@@ -12,7 +12,8 @@ This format follows rigorous open-source repository management standards.
 - **webview**: Removed static `+ 40px` height buffer from `OutputArea` causing excessive blank space at the bottom of short execution blocks. The `List` layout now tightly conforms to estimated internal content height.
 - **engine**: Fixed a pervasive synchronization bug where rapidly toggling or reloading the webview mid-execution resulted in permanent "running" (spinner) block states. The Session manager now queries `ExecutionEngine.getActiveBlockIds()` and broadcasts synthetic `blockComplete(killed)` messages before tearing down the terminal process tree.
 - **webview**: Fixed "ghost block command bleed" in `DocumentGroup.tsx` where executing the ghost block copied its command string to the newly appended ghost surface instead of initializing empty.
- 
+- **webview** [Bug 14]: Fixed a React 18 concurrent-mode race in `notebookStore.runBlock`. The old implementation set a `found` closure variable inside a `setState` functional updater. When React deferred the updater batch, `found` was still `false` when `runBlock` returned, causing it to return `null` — so `handleBlockSubmit` skipped `fluxTermService.execute()` entirely. The block state later flipped to `"running"` (when the deferred updater finally ran) with no corresponding host process, making kill a no-op. Fixed by pre-checking eligibility synchronously from a `stateRef` mirror before calling `setState`, removing any reliance on mutation inside a deferred updater.
+
 ## [1.1.0] - 2026-04-12
 
 ### Features
@@ -27,8 +28,6 @@ This format follows rigorous open-source repository management standards.
 - **webview**: Updated `App.test.tsx` empty-state test to check for the ghost block's textarea placeholder (`Type a command...`) instead of the removed `FluxTerm Notebook` heading and its subtitle, which were intentionally deleted in the notebook UI refactor.
 - **webview**: Fixed stale `notebookStore.test.ts` assertions: (1) `appendOutput` test now expects length 3 (separator + 2 lines) since `createBlock` injects a datetime separator as the first output entry. (2) `runBlock` test removed the synchronous return-value assertion — `found` is set inside a React `setState` updater which executes asynchronously and cannot be reliably captured in a local variable. Test now verifies observable state mutations only.
 - **webview**: Fixed `OutputArea` search-highlight test to walk the DOM tree upward from the text node to find the styled container div carrying the `backgroundColor` inline style, rather than checking the immediate `closest('div')` which is the Ansi wrapper.
-
-
 
 ### Features
 
