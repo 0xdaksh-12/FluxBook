@@ -159,7 +159,7 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
       } else {
         fluxBookService.notify(
           "warning",
-          `FlexBook: Invalid directory — "${trimmed}" does not exist.`,
+          `FluxBook: Invalid directory — "${trimmed}" does not exist.`,
         );
         inputRef.current?.focus();
       }

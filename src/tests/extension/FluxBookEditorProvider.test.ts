@@ -21,9 +21,9 @@ suite("FluxBookEditorProvider Test Suite", () => {
     }
   });
 
-  test("Should register flexbook.editor custom editor and open document", async () => {
+  test("Should register fluxbook.editor custom editor and open document", async () => {
     // Ensure extension is activated
-    const ext = vscode.extensions.getExtension("FlexBook.flexbook");
+    const ext = vscode.extensions.getExtension("FluxBook.fluxbook");
     if (ext && !ext.isActive) {
       await ext.activate();
     }
@@ -32,7 +32,7 @@ suite("FluxBookEditorProvider Test Suite", () => {
     await vscode.commands.executeCommand(
       "vscode.openWith",
       testFileUri,
-      "flexbook.editor",
+      "fluxbook.editor",
     );
 
     // Give it a moment to resolve
@@ -46,7 +46,7 @@ suite("FluxBookEditorProvider Test Suite", () => {
     assert.ok(isCustomEditor, "Active tab should be a custom editor");
 
     if (activeTab.input instanceof vscode.TabInputCustom) {
-      assert.strictEqual(activeTab.input.viewType, "flexbook.editor");
+      assert.strictEqual(activeTab.input.viewType, "fluxbook.editor");
       assert.strictEqual(activeTab.input.uri.fsPath, testFileUri.fsPath);
     }
 

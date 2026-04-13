@@ -270,15 +270,15 @@ Screenshot paths (`assets/screenshots/01_*.png` – `06_*.png`) are pre-wired in
 
 ---
 
-## Full Rebrand: `FluxTerm` → `FluxBook` / `flexbook`
+## Full Rebrand: `FluxTerm` → `FluxBook` / `fluxbook`
 
-**What changed**: Complete rename of all TypeScript identifiers, filenames, user-facing strings, VS Code contribution IDs, `package.json` metadata, and publisher to the new `FlexBook` brand.
+**What changed**: Complete rename of all TypeScript identifiers, filenames, user-facing strings, VS Code contribution IDs, `package.json` metadata, and publisher to the new `FluxBook` brand.
 
-**Why**: The `name: "flux_term"` field in `package.json` contained an underscore which is invalid per the `vsce` extension identifier spec (`^[a-z0-9][a-z0-9\-]*$`). The rebrand to `FlexBook` / `flexbook` resolves this while establishing a cleaner product identity.
+**Why**: The `name: "flux_term"` field in `package.json` contained an underscore which is invalid per the `vsce` extension identifier spec (`^[a-z0-9][a-z0-9\-]*$`). The rebrand to `FluxBook` / `fluxbook` resolves this while establishing a cleaner product identity.
 
 **Scope — what changed:**
 
-- `package.json`: `name` → `"flexbook"`, `displayName` → `"FlexBook"`, `publisher` → `"FlexBook"`, command ID → `"flexbook.newFile"`, editor viewType → `"flexbook.editor"`, editor displayName → `"FlexBook Editor"`, version reset to `"1.0.0"` for clean marketplace launch
+- `package.json`: `name` → `"fluxbook"`, `displayName` → `"FluxBook"`, `publisher` → `"FluxBook"`, command ID → `"fluxbook.newFile"`, editor viewType → `"fluxbook.editor"`, editor displayName → `"FluxBook Editor"`, version reset to `"1.0.0"` for clean marketplace launch
 - **TypeScript class identifiers** (via global `sed`):
   - `FluxTermEditorProvider` → `FluxBookEditorProvider`
   - `FluxTermDocumentSession` → `FluxBookDocumentSession`
@@ -290,13 +290,13 @@ Screenshot paths (`assets/screenshots/01_*.png` – `06_*.png`) are pre-wired in
   - `useFluxTermDocument` → `useFluxBookDocument`
   - `fluxTermService` → `fluxBookService`
 - **Files renamed** (9 files): `FluxTermEditorProvider.ts`, `FluxTermDocumentSession.ts`, `FluxTermCustomDocument.ts`, `FluxTermService.ts`, `useFluxTermDocument.ts`, and all 4 test files renamed to `FluxBook*`
-- **User-facing strings**: activation log, save-dialog filter, HTML `<title>`, log prefixes `[FlexBook EditorProvider]`, CWD validation notification, error output prefix
-- **Extension test IDs**: `vscode.extensions.getExtension("FlexBook.flexbook")`, all `flexbook.editor` / `flexbook.newFile` references in tests
+- **User-facing strings**: activation log, save-dialog filter, HTML `<title>`, log prefixes `[FluxBook EditorProvider]`, CWD validation notification, error output prefix
+- **Extension test IDs**: `vscode.extensions.getExtension("FluxBook.fluxbook")`, all `fluxbook.editor` / `fluxbook.newFile` references in tests
 - **`.vscode-test.mjs`**: Added `extensionDevelopmentPath` so VS Code loads the extension under test; corrected extension ID
-- **README**: All badges, asset URLs, install instructions updated to `FlexBook.flexbook`
+- **README**: All badges, asset URLs, install instructions updated to `FluxBook.fluxbook`
 
 **Stale compiled artifacts fix**: After renaming `FluxTerm*.test.ts` → `FluxBook*.test.ts`, `tsc` appends new compiled files to `dist/tests/extension/` without removing the old `FluxTerm*.test.js` files. `vscode-test` picked up both sets, causing two ghost test suites to fail. Fixed by deleting `dist/tests/extension/FluxTerm*.js` and `*.js.map`. Root cause: `compile-tests` never cleans `dist/` before compiling. Mitigation: add a `"clean": "rm -rf dist/"` script.
 
-**Final extension ID**: `FlexBook.flexbook`
-**Published artifact**: `flexbook-1.0.0.vsix`
+**Final extension ID**: `FluxBook.fluxbook`
+**Published artifact**: `fluxbook-1.0.0.vsix`
 **All tests**: 5 files / 44 unit+integration+webview tests pass, 7 extension E2E tests pass.

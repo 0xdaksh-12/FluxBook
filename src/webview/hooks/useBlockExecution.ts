@@ -55,7 +55,7 @@ export function useBlockExecution({
         case "blockError": {
           // Surface the error as a visible stderr line, then mark the block.
           appendOutput(message.blockId, [
-            { type: "stderr", text: `[FlexBook Error] ${message.message}` },
+            { type: "stderr", text: `[FluxBook Error] ${message.message}` },
           ]);
           setBlockStatus(message.blockId, "error");
           break;

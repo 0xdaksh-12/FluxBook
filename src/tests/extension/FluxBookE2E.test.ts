@@ -21,7 +21,7 @@ suite("FluxBook Electron E2E Workflow Test Suite", () => {
     );
 
     // Get extension API
-    const ext = vscode.extensions.getExtension("FlexBook.flexbook");
+    const ext = vscode.extensions.getExtension("FluxBook.fluxbook");
     if (!ext) {
       throw new Error("Extension not found");
     }
@@ -47,7 +47,7 @@ suite("FluxBook Electron E2E Workflow Test Suite", () => {
 
   test("Should launch extension, create file, and resolve session", async () => {
     // Trigger creation via the internal command and override the blocking dialog
-    await vscode.commands.executeCommand("flexbook.newFile", testFileUri);
+    await vscode.commands.executeCommand("fluxbook.newFile", testFileUri);
 
     // Wait for Webview Panel resolution
     await new Promise((resolve) => setTimeout(resolve, 2000));

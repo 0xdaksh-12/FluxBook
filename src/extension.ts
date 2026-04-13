@@ -3,12 +3,12 @@ import * as vscode from "vscode";
 import { FluxBookEditorProvider } from "./extension/providers/FluxBookEditorProvider";
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Congratulations, your extension "FlexBook" is now active!');
+  console.log('Congratulations, your extension "FluxBook" is now active!');
 
   // Register the custom editor provider for .ftx files
   const provider = new FluxBookEditorProvider(context);
   const editorProvider = vscode.window.registerCustomEditorProvider(
-    "flexbook.editor",
+    "fluxbook.editor",
     provider,
     {
       supportsMultipleEditorsPerDocument: true,
@@ -20,13 +20,13 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register command to create new .ftx file
   const newFileCommand = vscode.commands.registerCommand(
-    "flexbook.newFile",
+    "fluxbook.newFile",
     async (uriArg?: vscode.Uri) => {
       const uri =
         uriArg && uriArg instanceof vscode.Uri
           ? uriArg
           : await vscode.window.showSaveDialog({
-              filters: { "FlexBook Files": ["ftx"] },
+              filters: { "FluxBook Files": ["ftx"] },
               defaultUri: vscode.Uri.file("untitled.ftx"),
             });
 
@@ -36,11 +36,11 @@ export function activate(context: vscode.ExtensionContext) {
           uri,
           Buffer.from(JSON.stringify({}, null, 2)),
         );
-        // Open with FlexBook editor
+        // Open with FluxBook editor
         await vscode.commands.executeCommand(
           "vscode.openWith",
           uri,
-          "flexbook.editor",
+          "fluxbook.editor",
         );
       }
     },

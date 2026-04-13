@@ -1,13 +1,13 @@
 # Changelog
 
-All notable changes to the `src/` core of the "FlexBook" extension will be documented in this file, emphasizing development impact and functional changes.
+All notable changes to the `src/` core of the "FluxBook" extension will be documented in this file, emphasizing development impact and functional changes.
 This format follows rigorous open-source repository management standards.
 
 ## [Unreleased]
 
 ### Bug Fixes
 
-- **core**: Complete rebrand from `FluxTerm` → `FluxBook` across all TypeScript identifiers, filenames, and user-facing strings. All classes (`FluxBookEditorProvider`, `FluxBookDocumentSession`, `FluxBookCustomDocument`, `FluxBookDocument`, `FluxBookBlock`, `FluxBookContext`, `FluxBookService`), hooks (`useFluxBookDocument`, `fluxBookService`), and source files (`FluxBookEditorProvider.ts`, `FluxBookDocumentSession.ts`, `FluxBookCustomDocument.ts`, `FluxBookService.ts`, `useFluxBookDocument.ts`) renamed. `package.json` `name` updated to `"flexbook"` (valid `vsce` identifier — no underscores), `displayName` to `"FlexBook"`. VS Code contribution IDs updated to `flexbook.editor` / `flexbook.newFile`.
+- **core**: Complete rebrand from `FluxTerm` → `FluxBook` across all TypeScript identifiers, filenames, and user-facing strings. All classes (`FluxBookEditorProvider`, `FluxBookDocumentSession`, `FluxBookCustomDocument`, `FluxBookDocument`, `FluxBookBlock`, `FluxBookContext`, `FluxBookService`), hooks (`useFluxBookDocument`, `fluxBookService`), and source files (`FluxBookEditorProvider.ts`, `FluxBookDocumentSession.ts`, `FluxBookCustomDocument.ts`, `FluxBookService.ts`, `useFluxBookDocument.ts`) renamed. `package.json` `name` updated to `"fluxbook"` (valid `vsce` identifier — no underscores), `displayName` to `"FluxBook"`. VS Code contribution IDs updated to `fluxbook.editor` / `fluxbook.newFile`.
 
 - **extension (tests)**: Fixed `test:extension` suite failing with `Error: Extension not found`. `.vscode-test.mjs` was missing `extensionDevelopmentPath`, so VS Code launched without the extension registered. Added the project root as `extensionDevelopmentPath`. Also corrected stale extension ID `"0xflame-7.fluxterm"` in `FluxTermE2E.test.ts` and `FluxTermEditorProvider.test.ts` to `"FluxTerm.flexbook"` (matching the current `package.json` publisher and name).
 
@@ -18,9 +18,9 @@ This format follows rigorous open-source repository management standards.
 - **webview** [Bug 14]: Fixed a React 18 concurrent-mode race in `notebookStore.runBlock`. The old implementation set a `found` closure variable inside a `setState` functional updater. When React deferred the updater batch, `found` was still `false` when `runBlock` returned, causing it to return `null` — so `handleBlockSubmit` skipped `fluxTermService.execute()` entirely. The block state later flipped to `"running"` (when the deferred updater finally ran) with no corresponding host process, making kill a no-op. Fixed by pre-checking eligibility synchronously from a `stateRef` mirror before calling `setState`, removing any reliance on mutation inside a deferred updater.
 - **webview**: Fixed `DocumentGroup` and `GhostDocumentGroup` silently ignoring "Add Markdown Block" when the document contained no real blocks (only the ghost). The `onAddAfter` handler was gated on `cmd.trim() \&\& shell` — an empty ghost input never passed this check. Fixed by falling through to a direct `spliceBlockAfter("append", ...)` call using `baseContext.shell` as a fallback, creating the document group and markdown block regardless of ghost input state.
 
-### Refactors \& Architecture
+### Refactors & Architecture
 
-- **core**: Renamed all user-facing display strings, HTML titles, VS Code contribution labels, and notification messages from `FluxTerm` to `FlexBook`. Internal TypeScript identifiers (`FluxTermBlock`, `FluxTermService`, etc.) and VS Code marketplace publisher IDs are unchanged as they cannot use hyphens.
+- **core**: Final brand consolidation: all user-facing display strings, HTML titles, VS Code contribution IDs (`fluxbook.editor`, `fluxbook.newFile`), `package.json` `name`/`publisher`/`displayName`, README, CSS class names (`fluxbook-output-list`), and log prefixes (`[FluxBook EditorProvider]`, `[FluxBook Error]`) updated from transitional `FlexBook` brand to canonical `FluxBook`. Extension marketplace ID is now `FluxBook.fluxbook`.
 
 ## [1.1.0] - 2026-04-12
 

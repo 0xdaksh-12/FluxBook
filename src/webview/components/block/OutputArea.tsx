@@ -282,7 +282,7 @@ export const OutputArea: React.FC<{
           rowHeight={dynamicRowHeight}
           rowProps={{ flatItems }}
           rowComponent={RowItem}
-          className="flexbook-output-list"
+          className="fluxbook-output-list"
           style={{ width: "100%", height: "100%", overflowX: "hidden" }}
         />
       )}

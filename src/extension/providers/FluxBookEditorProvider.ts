@@ -43,7 +43,7 @@ export class FluxBookEditorProvider implements vscode.CustomEditorProvider<FluxB
       }
     } catch (e) {
       Ext.warn(
-        `[FlexBook EditorProvider] Could not parse .ftx file at ${uri.fsPath}; starting fresh`,
+        `[FluxBook EditorProvider] Could not parse .ftx file at ${uri.fsPath}; starting fresh`,
       );
       documentData = {};
     }
@@ -106,7 +106,7 @@ export class FluxBookEditorProvider implements vscode.CustomEditorProvider<FluxB
     cancellation: vscode.CancellationToken,
   ): Promise<void> {
     Ext.info(
-      `[FlexBook EditorProvider] Saving document: ${document.uri.fsPath}`,
+      `[FluxBook EditorProvider] Saving document: ${document.uri.fsPath}`,
     );
     await this.saveAs(document, document.uri);
   }
@@ -117,7 +117,7 @@ export class FluxBookEditorProvider implements vscode.CustomEditorProvider<FluxB
     cancellation: vscode.CancellationToken,
   ): Promise<void> {
     Ext.info(
-      `[FlexBook EditorProvider] Saving document AS: ${destination.fsPath}`,
+      `[FluxBook EditorProvider] Saving document AS: ${destination.fsPath}`,
     );
     await this.saveAs(document, destination);
   }
@@ -127,7 +127,7 @@ export class FluxBookEditorProvider implements vscode.CustomEditorProvider<FluxB
     cancellation: vscode.CancellationToken,
   ): Promise<void> {
     Ext.info(
-      `[FlexBook EditorProvider] Reverting document: ${document.uri.fsPath}`,
+      `[FluxBook EditorProvider] Reverting document: ${document.uri.fsPath}`,
     );
     // Re-read from disk
     const fileData = await vscode.workspace.fs.readFile(document.uri);
@@ -156,7 +156,7 @@ export class FluxBookEditorProvider implements vscode.CustomEditorProvider<FluxB
     cancellation: vscode.CancellationToken,
   ): Promise<vscode.CustomDocumentBackup> {
     Ext.info(
-      `[FlexBook EditorProvider] Backing up document: ${document.uri.fsPath}`,
+      `[FluxBook EditorProvider] Backing up document: ${document.uri.fsPath}`,
     );
     const backupData = Buffer.from(
       JSON.stringify(document.documentData, null, 2),
@@ -248,7 +248,7 @@ export class FluxBookEditorProvider implements vscode.CustomEditorProvider<FluxB
       <meta charset="UTF-8">
       <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webview.cspSource};">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>FlexBook Editor</title>
+      <title>FluxBook Editor</title>
       <link href="${styleUri}" rel="stylesheet">
       <link href="${codiconsUri}" rel="stylesheet" />
       <style>
