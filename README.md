@@ -18,8 +18,12 @@ _A notebook-style terminal where commands are structured, reusable, and composab
 ---
 
 <div align="center">
-<video src="https://raw.githubusercontent.com/0xdaksh-12/FluxBook/main/assets/video/HomePage.webm" autoplay loop muted playsinline width="100%"></video>
+
+![FluxBook Demo](https://raw.githubusercontent.com/0xdaksh-12/FluxBook/main/assets/video/HomePage.gif)
+
 </div>
+
+---
 
 ## The Problem
 
