@@ -147,7 +147,9 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
 
       // Validate: use statPath to confirm the exact path exists and is a directory.
       const normalized = trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
-      const { exists, isDirectory } = await fluxTermService.statPath(normalized || "/");
+      const { exists, isDirectory } = await fluxTermService.statPath(
+        normalized || "/",
+      );
 
       setIsValidating(false);
 
@@ -157,7 +159,7 @@ export const CwdEditor: React.FC<CwdEditorProps> = ({
       } else {
         fluxTermService.notify(
           "warning",
-          `Flux-Term: Invalid directory — "${trimmed}" does not exist.`,
+          `Flux_term: Invalid directory — "${trimmed}" does not exist.`,
         );
         inputRef.current?.focus();
       }

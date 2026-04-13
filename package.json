@@ -1,6 +1,6 @@
 {
-  "name": "flux-term",
-  "displayName": "Flux-Term",
+  "name": "flux_term",
+  "displayName": "Flux_term",
   "description": "A notebook-style terminal where commands are structured, reusable, and composable — directly in VS Code.",
   "version": "1.1.0",
   "publisher": "FluxTerm",
@@ -31,13 +31,13 @@
     "commands": [
       {
         "command": "fluxterm.newFile",
-        "title": "Flux-Term: New File"
+        "title": "Flux_term: New File"
       }
     ],
     "customEditors": [
       {
         "viewType": "fluxterm.editor",
-        "displayName": "Flux-Term Editor",
+        "displayName": "Flux_term Editor",
         "selector": [
           {
             "filenamePattern": "*.ftx"

@@ -43,7 +43,7 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
       }
     } catch (e) {
       Ext.warn(
-        `[Flux-Term EditorProvider] Could not parse .ftx file at ${uri.fsPath}; starting fresh`,
+        `[Flux_term EditorProvider] Could not parse .ftx file at ${uri.fsPath}; starting fresh`,
       );
       documentData = {};
     }
@@ -106,7 +106,7 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
     cancellation: vscode.CancellationToken,
   ): Promise<void> {
     Ext.info(
-      `[Flux-Term EditorProvider] Saving document: ${document.uri.fsPath}`,
+      `[Flux_term EditorProvider] Saving document: ${document.uri.fsPath}`,
     );
     await this.saveAs(document, document.uri);
   }
@@ -117,7 +117,7 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
     cancellation: vscode.CancellationToken,
   ): Promise<void> {
     Ext.info(
-      `[Flux-Term EditorProvider] Saving document AS: ${destination.fsPath}`,
+      `[Flux_term EditorProvider] Saving document AS: ${destination.fsPath}`,
     );
     await this.saveAs(document, destination);
   }
@@ -127,7 +127,7 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
     cancellation: vscode.CancellationToken,
   ): Promise<void> {
     Ext.info(
-      `[Flux-Term EditorProvider] Reverting document: ${document.uri.fsPath}`,
+      `[Flux_term EditorProvider] Reverting document: ${document.uri.fsPath}`,
     );
     // Re-read from disk
     const fileData = await vscode.workspace.fs.readFile(document.uri);
@@ -156,7 +156,7 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
     cancellation: vscode.CancellationToken,
   ): Promise<vscode.CustomDocumentBackup> {
     Ext.info(
-      `[Flux-Term EditorProvider] Backing up document: ${document.uri.fsPath}`,
+      `[Flux_term EditorProvider] Backing up document: ${document.uri.fsPath}`,
     );
     const backupData = Buffer.from(
       JSON.stringify(document.documentData, null, 2),
@@ -248,7 +248,7 @@ export class FluxTermEditorProvider implements vscode.CustomEditorProvider<FluxT
       <meta charset="UTF-8">
       <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webview.cspSource};">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Flux-Term Editor</title>
+      <title>Flux_term Editor</title>
       <link href="${styleUri}" rel="stylesheet">
       <link href="${codiconsUri}" rel="stylesheet" />
       <style>

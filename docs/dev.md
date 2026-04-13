@@ -248,20 +248,22 @@ Screenshot paths (`assets/screenshots/01_*.png` – `06_*.png`) are pre-wired in
 
 ---
 
-## Brand Rename: `FluxTerm` → `Flux-Term`
+## Brand Rename: `FluxTerm` → `Flux_term`
 
-**What changed**: All user-facing display strings, VS Code contribution point labels, HTML webview titles, save-dialog filter labels, and notification messages were updated from `FluxTerm` to `Flux-Term`.
+**What changed**: All user-facing display strings, VS Code contribution point labels, HTML webview titles, save-dialog filter labels, and notification messages were updated from `FluxTerm` to `Flux_term`.
 
-**Why**: Align the extension's user-visible branding with the official hyphenated product name (`Flux-Term`) consistently used in the README and marketplace `displayName`.
+**Why**: Align the extension's user-visible branding with the official hyphenated product name (`Flux_term`) consistently used in the README and marketplace `displayName`.
 
 **Scope — updated files:**
-- `package.json`: `"title": "Flux-Term: New File"`, `"displayName": "Flux-Term Editor"`
-- `src/extension.ts`: activation console log, "Flux-Term Files" save-dialog filter, inline comment
-- `src/extension/providers/FluxTermEditorProvider.ts`: `<title>Flux-Term Editor</title>` HTML, all `[Flux-Term EditorProvider]` log prefix strings
-- `src/webview/components/block/CwdEditor.tsx`: `Flux-Term: Invalid directory` warning notification message
+
+- `package.json`: `"title": "Flux_term: New File"`, `"displayName": "Flux_term Editor"`
+- `src/extension.ts`: activation console log, "Flux_term Files" save-dialog filter, inline comment
+- `src/extension/providers/FluxTermEditorProvider.ts`: `<title>Flux_term Editor</title>` HTML, all `[Flux_term EditorProvider]` log prefix strings
+- `src/webview/components/block/CwdEditor.tsx`: `Flux_term: Invalid directory` warning notification message
 - `CHANGELOG.md`: header description tagline
 
 **What did NOT change (intentionally):**
+
 - TypeScript class/interface/variable identifiers (`FluxTermBlock`, `FluxTermService`, `FluxTermDocument`, `FluxTermCustomDocument`, `FluxTermEditorProvider`, `FluxTermDocumentSession`, `fluxTermService`, `useFluxTermDocument`) — hyphens are not valid in TypeScript identifiers.
 - VS Code command contribution IDs (`fluxterm.editor`, `fluxterm.newFile`) — these are stable API surface identifiers; changing them would be a breaking change requiring all users to update keybindings/settings.
 - VS Code Marketplace publisher ID (`FluxTerm`) in README badges and `package.json#publisher` — this is a live marketplace account identifier.

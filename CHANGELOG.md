@@ -1,20 +1,22 @@
 # Changelog
 
-All notable changes to the `src/` core of the "Flux-Term" extension will be documented in this file, emphasizing development impact and functional changes.
+All notable changes to the `src/` core of the "Flux_term" extension will be documented in this file, emphasizing development impact and functional changes.
 This format follows rigorous open-source repository management standards.
 
 ## [Unreleased]
 
 ### Bug Fixes
+
 - **extension (tests)**: Added `tsconfig.test.json` targeting `"module": "CommonJS"` + `"moduleResolution": "Node"` for the E2E test compilation path. The root `tsconfig.json` uses `ESNext/Bundler` which emits ES `import` statements; Mocha inside the VS Code extension host requires CommonJS `require()`. The `compile-tests` and `watch-tests` scripts now point to the new config.
 - **webview**: Removed static `+ 40px` height buffer from `OutputArea` causing excessive blank space at the bottom of short execution blocks. The `List` layout now tightly conforms to estimated internal content height.
 - **engine**: Fixed a pervasive synchronization bug where rapidly toggling or reloading the webview mid-execution resulted in permanent "running" (spinner) block states. The Session manager now queries `ExecutionEngine.getActiveBlockIds()` and broadcasts synthetic `blockComplete(killed)` messages before tearing down the terminal process tree.
 - **webview**: Fixed "ghost block command bleed" in `DocumentGroup.tsx` where executing the ghost block copied its command string to the newly appended ghost surface instead of initializing empty.
-- **webview** [Bug 14]: Fixed a React 18 concurrent-mode race in `notebookStore.runBlock`. The old implementation set a `found` closure variable inside a `setState` functional updater. When React deferred the updater batch, `found` was still `false` when `runBlock` returned, causing it to return `null` — so `handleBlockSubmit` skipped `fluxTermService.execute()` entirely. The block state later flipped to `"running"` (when the deferred updater finally ran) with no corresponding host process, making kill a no-op. Fixed by pre-checking eligibility synchronously from a `stateRef` mirror before calling `setState`, removing any reliance on mutation inside a deferred updater. 
+- **webview** [Bug 14]: Fixed a React 18 concurrent-mode race in `notebookStore.runBlock`. The old implementation set a `found` closure variable inside a `setState` functional updater. When React deferred the updater batch, `found` was still `false` when `runBlock` returned, causing it to return `null` — so `handleBlockSubmit` skipped `fluxTermService.execute()` entirely. The block state later flipped to `"running"` (when the deferred updater finally ran) with no corresponding host process, making kill a no-op. Fixed by pre-checking eligibility synchronously from a `stateRef` mirror before calling `setState`, removing any reliance on mutation inside a deferred updater.
 - **webview**: Fixed `DocumentGroup` and `GhostDocumentGroup` silently ignoring "Add Markdown Block" when the document contained no real blocks (only the ghost). The `onAddAfter` handler was gated on `cmd.trim() \&\& shell` — an empty ghost input never passed this check. Fixed by falling through to a direct `spliceBlockAfter("append", ...)` call using `baseContext.shell` as a fallback, creating the document group and markdown block regardless of ghost input state.
 
 ### Refactors \& Architecture
-- **core**: Renamed all user-facing display strings, HTML titles, VS Code contribution labels, and notification messages from `FluxTerm` to `Flux-Term`. Internal TypeScript identifiers (`FluxTermBlock`, `FluxTermService`, etc.) and VS Code marketplace publisher IDs are unchanged as they cannot use hyphens.
+
+- **core**: Renamed all user-facing display strings, HTML titles, VS Code contribution labels, and notification messages from `FluxTerm` to `Flux_term`. Internal TypeScript identifiers (`FluxTermBlock`, `FluxTermService`, etc.) and VS Code marketplace publisher IDs are unchanged as they cannot use hyphens.
 
 ## [1.1.0] - 2026-04-12
 
